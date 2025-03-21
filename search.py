@@ -61,7 +61,6 @@ class Problem:
         and related algorithms try to maximize this value."""
         raise NotImplementedError
 
-
 # ______________________________________________________________________________
 
 # NEEDED
@@ -131,9 +130,7 @@ class Node:
         # with the same state in a Hash Table
         return hash(self.state)
 
-
 # ______________________________________________________________________________
-
 
 #class SimpleProblemSolvingAgentProgram:
 #    """
@@ -172,10 +169,8 @@ class Node:
 #    def search(self, problem):
 #        raise NotImplementedError
 
-
 # ______________________________________________________________________________
 # Uninformed Search algorithms
-
 
 #def breadth_first_tree_search(problem):
 #    """
@@ -194,7 +189,6 @@ class Node:
 #            return node
 #        frontier.extend(node.expand(problem))
 #    return None
-
 
 #def depth_first_tree_search(problem):
 #    """
@@ -288,11 +282,9 @@ def best_first_graph_search(problem, f, display=False):
                     frontier.append(child)
     return None
 
-
 #def uniform_cost_search(problem, display=False):
 #    """[Figure 3.14]"""
 #    return best_first_graph_search(problem, lambda node: node.path_cost, display)
-
 
 #def depth_limited_search(problem, limit=50):
 #    """[Figure 3.17]"""
@@ -315,14 +307,12 @@ def best_first_graph_search(problem, f, display=False):
 #    # Body of depth_limited_search:
 #    return recursive_dls(Node(problem.initial), problem, limit)
 
-
 #def iterative_deepening_search(problem):
 #    """[Figure 3.18]"""
 #    for depth in range(sys.maxsize):
 #        result = depth_limited_search(problem, depth)
 #        if result != 'cutoff':
 #            return result
-
 
 # ______________________________________________________________________________
 # Bidirectional Search
@@ -403,13 +393,10 @@ def bidirectional_search(problem):
 
     return np.inf
 
-
 # ______________________________________________________________________________
 # Informed (Heuristic) Search
 
-
 #greedy_best_first_graph_search = best_first_graph_search
-
 
 # Greedy best-first search is accomplished by specifying f(n) = h(n).
 
@@ -420,7 +407,6 @@ def astar_search(problem, h=None, display=False):
     else in your Problem subclass."""
     h = memoize(h or problem.h, 'h')
     return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
-
 
 #def recursive_best_first_search(problem, h=None):
 #    """[Figure 3.26]"""
@@ -453,7 +439,6 @@ def astar_search(problem, h=None, display=False):
 #    result, bestf = RBFS(problem, node, np.inf)
 #    return result
 
-
 #def hill_climbing(problem):
 #    """
 #    [Figure 4.2]
@@ -471,11 +456,9 @@ def astar_search(problem, h=None, display=False):
 #        current = neighbor
 #    return current.state
 
-
 #def exp_schedule(k=20, lam=0.005, limit=100):
 #    """One possible schedule function for simulated annealing"""
 #    return lambda t: (k * np.exp(-lam * t) if t < limit else 0)
-
 
 #def simulated_annealing(problem, schedule=exp_schedule()):
 #    """[Figure 4.5] CAUTION: This differs from the pseudocode as it
@@ -492,7 +475,6 @@ def astar_search(problem, h=None, display=False):
 #        delta_e = problem.value(next_choice.state) - problem.value(current.state)
 #        if delta_e > 0 or probability(np.exp(delta_e / T)):
 #            current = next_choice
-
 
 #def simulated_annealing_full(problem, schedule=exp_schedule()):
 #    """ This version returns all the states encountered in reaching
@@ -511,7 +493,6 @@ def astar_search(problem, h=None, display=False):
 #        delta_e = problem.value(next_choice.state) - problem.value(current.state)
 #        if delta_e > 0 or probability(np.exp(delta_e / T)):
 #            current = next_choice
-
 
 #def and_or_graph_search(problem):
 #    """[Figure 4.11]Used when the environment is nondeterministic and completely observable.
@@ -548,10 +529,8 @@ def astar_search(problem, h=None, display=False):
 #    # body of and or search
 #    return or_search(problem.initial, problem, [])
 
-
 # ______________________________________________________________________________
 # Graphs and Graph Problems
-
 
 # Needed
 class Graph:
@@ -611,11 +590,9 @@ class Graph:
         nodes = s1.union(s2)
         return list(nodes)
 
-
 #def UndirectedGraph(graph_dict=None):
 #    """Build a Graph where every edge (including future ones) goes both ways."""
 #    return Graph(graph_dict=graph_dict, directed=False)
-
 
 #def RandomGraph(nodes=list(range(10)), min_links=2, width=400, height=300,
 #                curvature=lambda: random.uniform(1.1, 1.5)):
@@ -645,7 +622,6 @@ class Graph:
 #                d = distance(g.locations[neighbor], here) * curvature()
 #                g.connect(node, neighbor, int(d))
 #    return g
-
 
 #""" [Figure 3.2]
 #Simplified road map of Romania
@@ -767,7 +743,6 @@ class GraphProblem(Problem):
             return int(distance(locs[node.state], locs[self.goal]))
         else:
             return np.inf
-
 
 #class GraphProblemStochastic(GraphProblem):
 #    """

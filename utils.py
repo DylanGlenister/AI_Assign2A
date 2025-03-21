@@ -13,15 +13,12 @@ from statistics import mean
 
 import numpy as np
 
-
 # ______________________________________________________________________________
 # Functions on Sequences and Iterables
-
 
 #def sequence(iterable):
 #    """Converts iterable to sequence, if it is not already one."""
 #    return iterable if isinstance(iterable, collections.abc.Sequence) else tuple([iterable])
-
 
 #def remove_all(item, seq):
 #    """Return a copy of seq (or string) with all occurrences of item removed."""
@@ -34,16 +31,13 @@ import numpy as np
 #    else:
 #        return [x for x in seq if x != item]
 
-
 #def unique(seq):
 #    """Remove duplicate elements from seq. Assumes hashable elements."""
 #    return list(set(seq))
 
-
 #def count(seq):
 #    """Count the number of items in sequence that are interpreted as true."""
 #    return sum(map(bool, seq))
-
 
 #def multimap(items):
 #    """Given (key, val) pairs, return {key: [val, ....], ...}."""
@@ -52,13 +46,11 @@ import numpy as np
 #        result[key].append(val)
 #    return dict(result)
 
-
 #def multimap_items(mmap):
 #    """Yield all (key, val) pairs stored in the multimap."""
 #    for (key, vals) in mmap.items():
 #        for val in vals:
 #            yield key, val
-
 
 #def product(numbers):
 #    """Return the product of the numbers, e.g. product([2, 3, 10]) == 60"""
@@ -67,53 +59,43 @@ import numpy as np
 #        result *= x
 #    return result
 
-
 #def first(iterable, default=None):
 #    """Return the first element of an iterable; or default."""
 #    return next(iter(iterable), default)
 
-
 def is_in(elt, seq):
     """Similar to (elt in seq), but compares with 'is', not '=='."""
     return any(x is elt for x in seq)
-
 
 #def mode(data):
 #    """Return the most common data item. If there are ties, return any one of them."""
 #    [(item, count)] = collections.Counter(data).most_common(1)
 #    return item
 
-
 #def power_set(iterable):
 #    """power_set([1,2,3]) --> (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
 #    s = list(iterable)
 #    return list(chain.from_iterable(combinations(s, r) for r in range(len(s) + 1)))[1:]
 
-
 #def extend(s, var, val):
 #    """Copy dict s and extend it by setting var to val; return copy."""
 #    return {**s, var: val}
 
-
 #def flatten(seqs):
 #    return sum(seqs, [])
-
 
 # ______________________________________________________________________________
 # argmin and argmax
 
 #identity = lambda x: x
 
-
 #def argmin_random_tie(seq, key=identity):
 #    """Return a minimum element of seq; break ties at random."""
 #    return min(shuffled(seq), key=key)
 
-
 #def argmax_random_tie(seq, key=identity):
 #    """Return an element with highest fn(seq[i]) score; break ties at random."""
 #    return max(shuffled(seq), key=key)
-
 
 #def shuffled(iterable):
 #    """Randomly shuffle a copy of iterable."""
@@ -121,10 +103,8 @@ def is_in(elt, seq):
 #    random.shuffle(items)
 #    return items
 
-
 # ______________________________________________________________________________
 # Statistical and mathematical functions
-
 
 #def histogram(values, mode=0, bin_function=None):
 #    """Return a list of (value, count) pairs, summarizing the input values.
@@ -142,17 +122,14 @@ def is_in(elt, seq):
 #    else:
 #        return sorted(bins.items())
 
-
 #def dot_product(x, y):
 #    """Return the sum of the element-wise product of vectors x and y."""
 #    return sum(_x * _y for _x, _y in zip(x, y))
-
 
 #def element_wise_product(x, y):
 #    """Return vector as an element-wise product of vectors x and y."""
 #    assert len(x) == len(y)
 #    return np.multiply(x, y)
-
 
 #def matrix_multiplication(x, *y):
 #    """Return a matrix as a matrix-multiplication of x and arbitrary number of matrices *y."""
@@ -163,21 +140,17 @@ def is_in(elt, seq):
 
 #    return result
 
-
 #def vector_add(a, b):
 #    """Component-wise addition of two vectors."""
 #    return tuple(map(operator.add, a, b))
-
 
 #def scalar_vector_product(x, y):
 #    """Return vector as a product of a scalar and a vector"""
 #    return np.multiply(x, y)
 
-
 #def probability(p):
 #    """Return true with probability p."""
 #    return p > random.uniform(0.0, 1.0)
-
 
 #def weighted_sample_with_replacement(n, seq, weights):
 #    """Pick n samples from seq at random, with replacement, with the
@@ -186,14 +159,12 @@ def is_in(elt, seq):
 #    sample = weighted_sampler(seq, weights)
 #    return [sample() for _ in range(n)]
 
-
 #def weighted_sampler(seq, weights):
 #    """Return a random-sample function that picks from seq weighted by weights."""
 #    totals = []
 #    for w in weights:
 #        totals.append(w + totals[-1] if totals else w)
 #    return lambda: seq[bisect.bisect(totals, random.uniform(0, totals[-1]))]
-
 
 #def weighted_choice(choices):
 #    """A weighted version of random.choice"""
@@ -207,7 +178,6 @@ def is_in(elt, seq):
 #            return c, w
 #        upto += w
 
-
 #def rounder(numbers, d=4):
 #    """Round a single number, or sequence of numbers, to d decimal places."""
 #    if isinstance(numbers, (int, float)):
@@ -215,7 +185,6 @@ def is_in(elt, seq):
 #    else:
 #        constructor = type(numbers)  # Can be list, set, tuple, etc.
 #        return constructor(rounder(n, d) for n in numbers)
-
 
 #def num_or_str(x):  # TODO: rename as `atom`
 #    """The argument is a string; convert to a number if possible, or strip it."""
@@ -227,42 +196,32 @@ def is_in(elt, seq):
 #        except ValueError:
 #            return str(x).strip()
 
-
 #def euclidean_distance(x, y):
 #    return np.sqrt(sum((_x - _y) ** 2 for _x, _y in zip(x, y)))
-
 
 #def manhattan_distance(x, y):
 #    return sum(abs(_x - _y) for _x, _y in zip(x, y))
 
-
 #def hamming_distance(x, y):
 #    return sum(_x != _y for _x, _y in zip(x, y))
-
 
 #def cross_entropy_loss(x, y):
 #    return (-1.0 / len(x)) * sum(_x * np.log(_y) + (1 - _x) * np.log(1 - _y) for _x, _y in zip(x, y))
 
-
 #def mean_squared_error_loss(x, y):
 #    return (1.0 / len(x)) * sum((_x - _y) ** 2 for _x, _y in zip(x, y))
-
 
 #def rms_error(x, y):
 #    return np.sqrt(ms_error(x, y))
 
-
 #def ms_error(x, y):
 #    return mean((_x - _y) ** 2 for _x, _y in zip(x, y))
-
 
 #def mean_error(x, y):
 #    return mean(abs(_x - _y) for _x, _y in zip(x, y))
 
-
 #def mean_boolean_error(x, y):
 #    return mean(_x != _y for _x, _y in zip(x, y))
-
 
 #def normalize(dist):
 #    """Multiply each number by a constant such that the sum is 1.0"""
@@ -275,73 +234,57 @@ def is_in(elt, seq):
 #    total = sum(dist)
 #    return [(n / total) for n in dist]
 
-
 #def random_weights(min_value, max_value, num_weights):
 #    return [random.uniform(min_value, max_value) for _ in range(num_weights)]
-
 
 #def sigmoid(x):
 #    """Return activation value of x with sigmoid function."""
 #    return 1 / (1 + np.exp(-x))
 
-
 #def sigmoid_derivative(value):
 #    return value * (1 - value)
-
 
 #def elu(x, alpha=0.01):
 #    return x if x > 0 else alpha * (np.exp(x) - 1)
 
-
 #def elu_derivative(value, alpha=0.01):
 #    return 1 if value > 0 else alpha * np.exp(value)
-
 
 #def tanh(x):
 #    return np.tanh(x)
 
-
 #def tanh_derivative(value):
 #    return 1 - (value ** 2)
-
 
 #def leaky_relu(x, alpha=0.01):
 #    return x if x > 0 else alpha * x
 
-
 #def leaky_relu_derivative(value, alpha=0.01):
 #    return 1 if value > 0 else alpha
-
 
 #def relu(x):
 #    return max(0, x)
 
-
 #def relu_derivative(value):
 #    return 1 if value > 0 else 0
-
 
 #def step(x):
 #    """Return activation value of x with sign function"""
 #    return 1 if x >= 0 else 0
 
-
 #def gaussian(mean, st_dev, x):
 #    """Given the mean and standard deviation of a distribution, it returns the probability of x."""
 #    return 1 / (np.sqrt(2 * np.pi) * st_dev) * np.e ** (-0.5 * (float(x - mean) / st_dev) ** 2)
-
 
 #def linear_kernel(x, y=None):
 #    if y is None:
 #        y = x
 #    return np.dot(x, y.T)
 
-
 #def polynomial_kernel(x, y=None, degree=2.0):
 #    if y is None:
 #        y = x
 #    return (1.0 + np.dot(x, y.T)) ** degree
-
 
 #def rbf_kernel(x, y=None, gamma=None):
 #    """Radial-basis function kernel (aka squared-exponential kernel)."""
@@ -352,26 +295,20 @@ def is_in(elt, seq):
 #    return np.exp(-gamma * (-2.0 * np.dot(x, y.T) +
 #                            np.sum(x * x, axis=1).reshape((-1, 1)) + np.sum(y * y, axis=1).reshape((1, -1))))
 
-
 # ______________________________________________________________________________
 # Grid Functions
-
 
 #orientations = EAST, NORTH, WEST, SOUTH = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 #turns = LEFT, RIGHT = (+1, -1)
 
-
 #def turn_heading(heading, inc, headings=orientations):
 #    return headings[(headings.index(heading) + inc) % len(headings)]
-
 
 #def turn_right(heading):
 #    return turn_heading(heading, RIGHT)
 
-
 #def turn_left(heading):
 #    return turn_heading(heading, LEFT)
-
 
 def distance(a, b):
     """The distance between two (x, y) points."""
@@ -379,13 +316,11 @@ def distance(a, b):
     xB, yB = b
     return np.hypot((xA - xB), (yA - yB))
 
-
 #def distance_squared(a, b):
 #    """The square of the distance between two (x, y) points."""
 #    xA, yA = a
 #    xB, yB = b
 #    return (xA - xB) ** 2 + (yA - yB) ** 2
-
 
 # ______________________________________________________________________________
 # Misc Functions
@@ -428,23 +363,19 @@ def memoize(fn, slot=None, maxsize=32):
 
     return out
 
-
 #def name(obj):
 #    """Try to find some reasonable name for the object."""
 #    return (getattr(obj, 'name', 0) or getattr(obj, '__name__', 0) or
 #            getattr(getattr(obj, '__class__', 0), '__name__', 0) or
 #            str(obj))
 
-
 #def isnumber(x):
 #    """Is x a number?"""
 #    return hasattr(x, '__int__')
 
-
 #def issequence(x):
 #    """Is x a sequence?"""
 #    return isinstance(x, collections.abc.Sequence)
-
 
 #def print_table(table, header=None, sep='   ', numfmt='{}'):
 #    """Print a list of lists as a table, so that columns line up nicely.
@@ -465,13 +396,11 @@ def memoize(fn, slot=None, maxsize=32):
 #    for row in table:
 #        print(sep.join(getattr(str(x), j)(size) for (j, size, x) in zip(justs, sizes, row)))
 
-
 #def open_data(name, mode='r'):
 #    aima_root = os.path.dirname(__file__)
 #    aima_file = os.path.join(aima_root, *['aima-data', name])
 
 #    return open(aima_file, mode=mode)
-
 
 #def failure_test(algorithm, tests):
 #    """Grades the given algorithm based on how many tests it passes.
@@ -480,7 +409,6 @@ def memoize(fn, slot=None, maxsize=32):
 #    particular on fail (for example, False, or None).
 #    tests is a list with each element in the form: (values, failure_output)."""
 #    return mean(int(algorithm(x) != y) for x, y in tests)
-
 
 # ______________________________________________________________________________
 # Expressions
@@ -623,24 +551,19 @@ def memoize(fn, slot=None, maxsize=32):
 #            opp = (' ' + op + ' ')
 #            return '(' + opp.join(args) + ')'
 
-
 ## An 'Expression' is either an Expr or a Number.
 ## Symbol is not an explicit type; it is any Expr with 0 args.
 
-
 #Number = (int, float, complex)
 #Expression = (Expr, Number)
-
 
 #def Symbol(name):
 #    """A Symbol is just an Expr with no args."""
 #    return Expr(name)
 
-
 #def symbols(names):
 #    """Return a tuple of Symbols; names is a comma/whitespace delimited str."""
 #    return tuple(Symbol(name) for name in names.replace(',', ' ').split())
-
 
 #def subexpressions(x):
 #    """Yield the subexpressions of an Expression (including x itself)."""
@@ -649,7 +572,6 @@ def memoize(fn, slot=None, maxsize=32):
 #        for arg in x.args:
 #            yield from subexpressions(arg)
 
-
 #def arity(expression):
 #    """The number of sub-expressions in this expression."""
 #    if isinstance(expression, Expr):
@@ -657,9 +579,7 @@ def memoize(fn, slot=None, maxsize=32):
 #    else:  # expression is a number
 #        return 0
 
-
 # For operators that are not defined in Python, we allow new InfixOps:
-
 
 #class PartialExpr:
 #    """Given 'P |'==>'| Q, first form PartialExpr('==>', P), then combine with Q."""
@@ -673,7 +593,6 @@ def memoize(fn, slot=None, maxsize=32):
 #    def __repr__(self):
 #        return "PartialExpr('{}', {})".format(self.op, self.lhs)
 
-
 #def expr(x):
 #    """Shortcut to create an Expression. x is a str in which:
 #    - identifiers are automatically defined as Symbols.
@@ -684,9 +603,7 @@ def memoize(fn, slot=None, maxsize=32):
 #    """
 #    return eval(expr_handle_infix_ops(x), defaultkeydict(Symbol)) if isinstance(x, str) else x
 
-
 #infix_ops = '==> <== <=>'.split()
-
 
 #def expr_handle_infix_ops(x):
 #    """Given a str, return a new str with ==> replaced by |'==>'|, etc.
@@ -696,7 +613,6 @@ def memoize(fn, slot=None, maxsize=32):
 #    for op in infix_ops:
 #        x = x.replace(op, '|' + repr(op) + '|')
 #    return x
-
 
 #class defaultkeydict(collections.defaultdict):
 #    """Like defaultdict, but the default_factory is a function of the key.
@@ -708,7 +624,6 @@ def memoize(fn, slot=None, maxsize=32):
 #        self[key] = result = self.default_factory(key)
 #        return result
 
-
 #class hashabledict(dict):
 #    """Allows hashing by representing a dictionary as tuple of key:value pairs.
 #    May cause problems as the hash value may change during runtime."""
@@ -716,12 +631,10 @@ def memoize(fn, slot=None, maxsize=32):
 #    def __hash__(self):
 #        return 1
 
-
 # ______________________________________________________________________________
 # Queues: Stack, FIFOQueue, PriorityQueue
 # Stack and FIFOQueue are implemented as list and collection.deque
 # PriorityQueue is implemented here
-
 
 class PriorityQueue:
     """A Queue in which the minimum (or maximum) element (as determined by f and
@@ -780,15 +693,12 @@ class PriorityQueue:
             raise KeyError(str(key) + " is not in the priority queue")
         heapq.heapify(self.heap)
 
-
 # ______________________________________________________________________________
 # Useful Shorthands
-
 
 #class Bool(int):
 #    """Just like `bool`, except values display as 'T' and 'F' instead of 'True' and 'False'."""
 #    __str__ = __repr__ = lambda self: 'T' if self else 'F'
-
 
 #T = Bool(True)
 #F = Bool(False)
