@@ -784,6 +784,10 @@ class GraphProblemStochastic(GraphProblem):
         raise NotImplementedError
 
 if __name__ == "__main__":
+
+    # Extract parameter 1: filename of graph
+    # Extract parameter 2: "method" function used
+
     graph = Graph(dict(
         A=dict(C=5, D=6),
         B=dict(A=4, C=4),
@@ -794,3 +798,11 @@ if __name__ == "__main__":
     ))
     result = breadth_first_graph_search(GraphProblem("B", "E", graph))
     print(result)
+
+    # Output paramter 1
+    # Output paramter 2
+    # \n
+    # Ouput goal node
+    # Output number (length of path)
+    # \n
+    # Output path: list of nodes
