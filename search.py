@@ -6,10 +6,105 @@ then create problem instances and solve them with calls to the various search
 functions.
 """
 
-#import sys
+import sys
 from collections import deque
 
-from utils import *
+#from utils import *
+import functools
+import heapq
+import numpy as np
+
+def is_in(elt, seq):
+	"""Similar to (elt in seq), but compares with 'is', not '=='."""
+	return any(x is elt for x in seq)
+
+def distance(a, b):
+	"""The distance between two (x, y) points."""
+	xA, yA = a
+	xB, yB = b
+	return np.hypot((xA - xB), (yA - yB))
+
+# Edited
+# BUG Trying to fix the error broke this function. Using the slot param causes the pathfinding to error.
+def memoize(fn, slot=None, maxsize=32):
+	"""Memoize fn: make it remember the computed value for any argument list.
+	If slot is specified, store result in that slot of first argument.
+	If slot is false, use lru_cache for caching the values."""
+	if slot:
+		def memoized_normal(obj, *args):
+			if hasattr(obj, slot):
+				return getattr(obj, slot)
+			else:
+				val = fn(obj, *args)
+				setattr(obj, slot, val)
+				return val
+
+		out = memoized_normal
+	else:
+		@functools.lru_cache(maxsize=maxsize)
+		def memoized_cached(*args):
+			return fn(*args)
+
+		out = memoized_cached
+
+	return out
+
+class PriorityQueue:
+	"""A Queue in which the minimum (or maximum) element (as determined by f and
+	order) is returned first.
+	If order is 'min', the item with minimum f(x) is
+	returned first; if order is 'max', then it is the item with maximum f(x).
+	Also supports dict-like lookup."""
+
+	def __init__(self, order='min', f=lambda x: x):
+		self.heap = []
+		if order == 'min':
+			self.f = f
+		elif order == 'max':  # now item with max f(x)
+			self.f = lambda x: -f(x)  # will be popped first
+		else:
+			raise ValueError("Order must be either 'min' or 'max'.")
+
+	def append(self, item):
+		"""Insert item at its correct position."""
+		heapq.heappush(self.heap, (self.f(item), item))
+
+	def extend(self, items):
+		"""Insert each item in items at its correct position."""
+		for item in items:
+			self.append(item)
+
+	def pop(self):
+		"""Pop and return the item (with min or max f(x) value)
+		depending on the order."""
+		if self.heap:
+			return heapq.heappop(self.heap)[1]
+		else:
+			raise Exception('Trying to pop from empty PriorityQueue.')
+
+	def __len__(self):
+		"""Return current capacity of PriorityQueue."""
+		return len(self.heap)
+
+	def __contains__(self, key):
+		"""Return True if the key is in PriorityQueue."""
+		return any([item == key for _, item in self.heap])
+
+	def __getitem__(self, key):
+		"""Returns the first value associated with key in PriorityQueue.
+		Raises KeyError if key is not present."""
+		for value, item in self.heap:
+			if item == key:
+				return value
+		raise KeyError(str(key) + " is not in the priority queue")
+
+	def __delitem__(self, key):
+		"""Delete the first occurrence of key."""
+		try:
+			del self.heap[[item == key for _, item in self.heap].index(True)]
+		except ValueError:
+			raise KeyError(str(key) + " is not in the priority queue")
+		heapq.heapify(self.heap)
 
 # NEEDED
 class Problem:
@@ -60,8 +155,6 @@ class Problem:
 		"""For optimization problems, each state has a value. Hill Climbing
 		and related algorithms try to maximize this value."""
 		raise NotImplementedError
-
-# ______________________________________________________________________________
 
 # NEEDED
 class Node:
@@ -130,83 +223,103 @@ class Node:
 		# with the same state in a Hash Table
 		return hash(self.state)
 
-# ______________________________________________________________________________
+# Needed
+class Graph:
+	"""A graph connects nodes (vertices) by edges (links). Each edge can also
+	have a length associated with it. The constructor call is something like:
+		g = Graph({'A': {'B': 1, 'C': 2})
+	this makes a graph with 3 nodes, A, B, and C, with an edge of length 1 from
+	A to B,  and an edge of length 2 from A to C. You can also do:
+		g = Graph({'A': {'B': 1, 'C': 2}, directed=False)
+	This makes an undirected graph, so inverse links are also added. The graph
+	stays undirected; if you add more links with g.connect('B', 'C', 3), then
+	inverse link is also added. You can use g.nodes() to get a list of nodes,
+	g.get('A') to get a dict of links out of A, and g.get('A', 'B') to get the
+	length of the link from A to B. 'Lengths' can actually be any object at
+	all, and nodes can be any hashable object."""
 
-#class SimpleProblemSolvingAgentProgram:
-#    """
-#    [Figure 3.1]
-#    Abstract framework for a problem-solving agent.
-#    """
+	def __init__(self, graph_dict=None, directed=True):
+		self.locations = {}
+		self.least_costs = {}
+		self.graph_dict = graph_dict or {}
+		self.directed = directed
+		if not directed:
+			self.make_undirected()
 
-#    def __init__(self, initial_state=None):
-#        """State is an abstract representation of the state
-#        of the world, and seq is the list of actions required
-#        to get to a particular state from the initial state(root)."""
-#        self.state = initial_state
-#        self.seq = []
+	def make_undirected(self):
+		"""Make a digraph into an undirected graph by adding symmetric edges."""
+		for a in list(self.graph_dict.keys()):
+			for (b, dist) in self.graph_dict[a].items():
+				self.connect1(b, a, dist)
 
-#    def __call__(self, percept):
-#        """[Figure 3.1] Formulate a goal and problem, then
-#        search for a sequence of actions to solve it."""
-#        self.state = self.update_state(self.state, percept)
-#        if not self.seq:
-#            goal = self.formulate_goal(self.state)
-#            problem = self.formulate_problem(self.state, goal)
-#            self.seq = self.search(problem)
-#            if not self.seq:
-#                return None
-#        return self.seq.pop(0)
+	def connect(self, A, B, distance=1):
+		"""Add a link from A and B of given distance, and also add the inverse
+		link if the graph is undirected."""
+		self.connect1(A, B, distance)
+		if not self.directed:
+			self.connect1(B, A, distance)
 
-#    def update_state(self, state, percept):
-#        raise NotImplementedError
+	def connect1(self, A, B, distance):
+		"""Add a link from A to B of given distance, in one direction only."""
+		self.graph_dict.setdefault(A, {})[B] = distance
 
-#    def formulate_goal(self, state):
-#        raise NotImplementedError
+	def get(self, a, b=None):
+		"""Return a link distance or a dict of {node: distance} entries.
+		.get(a,b) returns the distance or None;
+		.get(a) returns a dict of {node: distance} entries, possibly {}."""
+		links = self.graph_dict.setdefault(a, {})
+		if b is None:
+			return links
+		else:
+			return links.get(b)
 
-#    def formulate_problem(self, state, goal):
-#        raise NotImplementedError
+	def nodes(self):
+		"""Return a list of nodes in the graph."""
+		s1 = set([k for k in self.graph_dict.keys()])
+		s2 = set([k2 for v in self.graph_dict.values() for k2, v2 in v.items()])
+		nodes = s1.union(s2)
+		return list(nodes)
 
-#    def search(self, problem):
-#        raise NotImplementedError
+# NEEDED
+class GraphProblem(Problem):
+	"""The problem of searching a graph from one node to another."""
 
-# ______________________________________________________________________________
-# Uninformed Search algorithms
+	def __init__(self, initial, goal, graph):
+		super().__init__(initial, goal)
+		self.graph = graph
 
-#def breadth_first_tree_search(problem):
-#    """
-#    [Figure 3.7]
-#    Search the shallowest nodes in the search tree first.
-#    Search through the successors of a problem to find a goal.
-#    The argument frontier should be an empty queue.
-#    Repeats infinitely in case of loops.
-#    """
+	def actions(self, state):
+		"""The actions at a graph node are just its neighbors."""
+		return list(self.graph.get(state).keys())
 
-#    frontier = deque([Node(problem.initial)])  # FIFO queue
+	def result(self, state, action):
+		"""The result of going to a neighbor is just that neighbor."""
+		return action
 
-#    while frontier:
-#        node = frontier.popleft()
-#        if problem.goal_test(node.state):
-#            return node
-#        frontier.extend(node.expand(problem))
-#    return None
+	def path_cost(self, cost, state1, action, state2):
+		"""Cost is the cost so far."""
+		return cost + (self.graph.get(state1, state2) or np.inf)
 
-#def depth_first_tree_search(problem):
-#    """
-#    [Figure 3.7]
-#    Search the deepest nodes in the search tree first.
-#    Search through the successors of a problem to find a goal.
-#    The argument frontier should be an empty queue.
-#    Repeats infinitely in case of loops.
-#    """
+	def find_min_edge(self):
+		"""Find minimum value of edges."""
+		m = np.inf
+		for d in self.graph.graph_dict.values():
+			local_min = min(d.values())
+			m = min(m, local_min)
 
-#    frontier = [Node(problem.initial)]  # Stack
+		return m
 
-#    while frontier:
-#        node = frontier.pop()
-#        if problem.goal_test(node.state):
-#            return node
-#        frontier.extend(node.expand(problem))
-#    return None
+	def h(self, node):
+		"""h function is straight-line distance from a node's state to goal."""
+		#locs = getattr(self.graph, 'locations', None)
+		locs = self.graph.locations
+		if locs:
+			if type(node) is str:
+				return int(distance(locs[node], locs[self.goal]))
+
+			return int(distance(locs[node.state], locs[self.goal]))
+		else:
+			return np.inf
 
 # NEEDED
 def depth_first_graph_search(problem):
@@ -282,123 +395,38 @@ def best_first_graph_search(problem, f, display=False):
 					frontier.append(child)
 	return None
 
-#def uniform_cost_search(problem, display=False):
-#    """[Figure 3.14]"""
-#    return best_first_graph_search(problem, lambda node: node.path_cost, display)
+# This is effectively the greedy best first search
+def uniform_cost_search(problem, display=False):
+	"""[Figure 3.14]"""
+	return best_first_graph_search(problem, lambda node: node.path_cost, display)
 
-#def depth_limited_search(problem, limit=50):
-#    """[Figure 3.17]"""
+def depth_limited_search(problem, limit=50):
+	"""[Figure 3.17]"""
 
-#    def recursive_dls(node, problem, limit):
-#        if problem.goal_test(node.state):
-#            return node
-#        elif limit == 0:
-#            return 'cutoff'
-#        else:
-#            cutoff_occurred = False
-#            for child in node.expand(problem):
-#                result = recursive_dls(child, problem, limit - 1)
-#                if result == 'cutoff':
-#                    cutoff_occurred = True
-#                elif result is not None:
-#                    return result
-#            return 'cutoff' if cutoff_occurred else None
-
-#    # Body of depth_limited_search:
-#    return recursive_dls(Node(problem.initial), problem, limit)
-
-#def iterative_deepening_search(problem):
-#    """[Figure 3.18]"""
-#    for depth in range(sys.maxsize):
-#        result = depth_limited_search(problem, depth)
-#        if result != 'cutoff':
-#            return result
-
-# ______________________________________________________________________________
-# Bidirectional Search
-# Pseudocode from https://webdocs.cs.ualberta.ca/%7Eholte/Publications/MM-AAAI2016.pdf
-
-def bidirectional_search(problem):
-	e = 0
-	if isinstance(problem, GraphProblem):
-		e = problem.find_min_edge()
-	gF, gB = {Node(problem.initial): 0}, {Node(problem.goal): 0}
-	openF, openB = [Node(problem.initial)], [Node(problem.goal)]
-	closedF, closedB = [], []
-	U = np.inf
-
-	def extend(U, open_dir, open_other, g_dir, g_other, closed_dir):
-		"""Extend search in given direction"""
-		n = find_key(C, open_dir, g_dir)
-
-		open_dir.remove(n)
-		closed_dir.append(n)
-
-		for c in n.expand(problem):
-			if c in open_dir or c in closed_dir:
-				if g_dir[c] <= problem.path_cost(g_dir[n], n.state, None, c.state):
-					continue
-
-				open_dir.remove(c)
-
-			g_dir[c] = problem.path_cost(g_dir[n], n.state, None, c.state)
-			open_dir.append(c)
-
-			if c in open_other:
-				U = min(U, g_dir[c] + g_other[c])
-
-		return U, open_dir, closed_dir, g_dir
-
-	def find_min(open_dir, g):
-		"""Finds minimum priority, g and f values in open_dir"""
-		# pr_min_f isn't forward pr_min instead it's the f-value
-		# of node with priority pr_min.
-		pr_min, pr_min_f = np.inf, np.inf
-		for n in open_dir:
-			f = g[n] + problem.h(n)
-			pr = max(f, 2 * g[n])
-			pr_min = min(pr_min, pr)
-			pr_min_f = min(pr_min_f, f)
-
-		return pr_min, pr_min_f, min(g.values())
-
-	def find_key(pr_min, open_dir, g):
-		"""Finds key in open_dir with value equal to pr_min
-		and minimum g value."""
-		m = np.inf
-		node = Node(-1)
-		for n in open_dir:
-			pr = max(g[n] + problem.h(n), 2 * g[n])
-			if pr == pr_min:
-				if g[n] < m:
-					m = g[n]
-					node = n
-
-		return node
-
-	while openF and openB:
-		pr_min_f, f_min_f, g_min_f = find_min(openF, gF)
-		pr_min_b, f_min_b, g_min_b = find_min(openB, gB)
-		C = min(pr_min_f, pr_min_b)
-
-		if U <= max(C, f_min_f, f_min_b, g_min_f + g_min_b + e):
-			return U
-
-		if C == pr_min_f:
-			# Extend forward
-			U, openF, closedF, gF = extend(U, openF, openB, gF, gB, closedF)
+	def recursive_dls(node, problem, limit):
+		if problem.goal_test(node.state):
+			return node
+		elif limit == 0:
+			return 'cutoff'
 		else:
-			# Extend backward
-			U, openB, closedB, gB = extend(U, openB, openF, gB, gF, closedB)
+			cutoff_occurred = False
+			for child in node.expand(problem):
+					result = recursive_dls(child, problem, limit - 1)
+					if result == 'cutoff':
+						cutoff_occurred = True
+					elif result is not None:
+						return result
+			return 'cutoff' if cutoff_occurred else None
 
-	return np.inf
+	# Body of depth_limited_search:
+	return recursive_dls(Node(problem.initial), problem, limit)
 
-# ______________________________________________________________________________
-# Informed (Heuristic) Search
-
-#greedy_best_first_graph_search = best_first_graph_search
-
-# Greedy best-first search is accomplished by specifying f(n) = h(n).
+def iterative_deepening_search(problem):
+	"""[Figure 3.18]"""
+	for depth in range(sys.maxsize):
+		result = depth_limited_search(problem, depth)
+		if result != 'cutoff':
+			return result
 
 # NEEDED
 def astar_search(problem, h=None, display=False):
@@ -408,36 +436,235 @@ def astar_search(problem, h=None, display=False):
 	h = memoize(h or problem.h, 'h')
 	return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
 
-#def recursive_best_first_search(problem, h=None):
-#    """[Figure 3.26]"""
-#    h = memoize(h or problem.h, 'h')
+if __name__ == "__main__":
 
-#    def RBFS(problem, node, flimit):
+	# Extract parameter 1: filename of graph
+	# Extract parameter 2: "method" function used
+
+	graph = Graph(dict(
+		A=dict(C=5, D=6),
+		B=dict(A=4, C=4),
+		C=dict(A=5, E=6, F=7),
+		D=dict(A=6, C=5, E=7),
+		E=dict(C=6, D=8),
+		F=dict(C=7)
+	))
+	graph.locations = dict(
+		A=(4,1),
+		B=(2,2),
+		C=(4,4),
+		D=(6,3),
+		E=(5,6),
+		F=(7,5)
+	)
+	problem = GraphProblem("B", "E", graph)
+	result = breadth_first_graph_search(problem)
+	print(result)
+
+	# Output paramter 1
+	# Output paramter 2
+	# \n
+	# Ouput goal node
+	# Output number (length of path)
+	# \n
+	# Output path: list of nodes
+
+# ______________________________________________________________________________
+
+#class SimpleProblemSolvingAgentProgram:
+#    """
+#    [Figure 3.1]
+#    Abstract framework for a problem-solving agent.
+#    """
+
+#    def __init__(self, initial_state=None):
+#        """State is an abstract representation of the state
+#        of the world, and seq is the list of actions required
+#        to get to a particular state from the initial state(root)."""
+#        self.state = initial_state
+#        self.seq = []
+
+#    def __call__(self, percept):
+#        """[Figure 3.1] Formulate a goal and problem, then
+#        search for a sequence of actions to solve it."""
+#        self.state = self.update_state(self.state, percept)
+#        if not self.seq:
+#            goal = self.formulate_goal(self.state)
+#            problem = self.formulate_problem(self.state, goal)
+#            self.seq = self.search(problem)
+#            if not self.seq:
+#                return None
+#        return self.seq.pop(0)
+
+#    def update_state(self, state, percept):
+#        raise NotImplementedError
+
+#    def formulate_goal(self, state):
+#        raise NotImplementedError
+
+#    def formulate_problem(self, state, goal):
+#        raise NotImplementedError
+
+#    def search(self, problem):
+#        raise NotImplementedError
+
+# ______________________________________________________________________________
+# Uninformed Search algorithms
+
+# Doesn't mark node as visited
+#def breadth_first_tree_search(problem):
+#    """
+#    [Figure 3.7]
+#    Search the shallowest nodes in the search tree first.
+#    Search through the successors of a problem to find a goal.
+#    The argument frontier should be an empty queue.
+#    Repeats infinitely in case of loops.
+#    """
+
+#    frontier = deque([Node(problem.initial)])  # FIFO queue
+
+#    while frontier:
+#        node = frontier.popleft()
 #        if problem.goal_test(node.state):
-#            return node, 0  # (The second value is immaterial)
-#        successors = node.expand(problem)
-#        if len(successors) == 0:
-#            return None, np.inf
-#        for s in successors:
-#            s.f = max(s.path_cost + h(s), node.f)
-#        while True:
-#            # Order by lowest f value
-#            successors.sort(key=lambda x: x.f)
-#            best = successors[0]
-#            if best.f > flimit:
-#                return None, best.f
-#            if len(successors) > 1:
-#                alternative = successors[1].f
-#            else:
-#                alternative = np.inf
-#            result, best.f = RBFS(problem, best, min(flimit, alternative))
-#            if result is not None:
-#                return result, best.f
+#            return node
+#        frontier.extend(node.expand(problem))
+#    return None
 
-#    node = Node(problem.initial)
-#    node.f = h(node)
-#    result, bestf = RBFS(problem, node, np.inf)
-#    return result
+# Doesn't mark node as visited
+#def depth_first_tree_search(problem):
+#    """
+#    [Figure 3.7]
+#    Search the deepest nodes in the search tree first.
+#    Search through the successors of a problem to find a goal.
+#    The argument frontier should be an empty queue.
+#    Repeats infinitely in case of loops.
+#    """
+
+#    frontier = [Node(problem.initial)]  # Stack
+
+#    while frontier:
+#        node = frontier.pop()
+#        if problem.goal_test(node.state):
+#            return node
+#        frontier.extend(node.expand(problem))
+#    return None
+
+# ______________________________________________________________________________
+# Bidirectional Search
+# Pseudocode from https://webdocs.cs.ualberta.ca/%7Eholte/Publications/MM-AAAI2016.pdf
+
+#def bidirectional_search(problem):
+#	e = 0
+#	if isinstance(problem, GraphProblem):
+#		e = problem.find_min_edge()
+#	gF, gB = {Node(problem.initial): 0}, {Node(problem.goal): 0}
+#	openF, openB = [Node(problem.initial)], [Node(problem.goal)]
+#	closedF, closedB = [], []
+#	U = np.inf
+
+#	def extend(U, open_dir, open_other, g_dir, g_other, closed_dir):
+#		"""Extend search in given direction"""
+#		n = find_key(C, open_dir, g_dir)
+
+#		open_dir.remove(n)
+#		closed_dir.append(n)
+
+#		for c in n.expand(problem):
+#			if c in open_dir or c in closed_dir:
+#				if g_dir[c] <= problem.path_cost(g_dir[n], n.state, None, c.state):
+#					continue
+
+#				open_dir.remove(c)
+
+#			g_dir[c] = problem.path_cost(g_dir[n], n.state, None, c.state)
+#			open_dir.append(c)
+
+#			if c in open_other:
+#				U = min(U, g_dir[c] + g_other[c])
+
+#		return U, open_dir, closed_dir, g_dir
+
+#	def find_min(open_dir, g):
+#		"""Finds minimum priority, g and f values in open_dir"""
+#		# pr_min_f isn't forward pr_min instead it's the f-value
+#		# of node with priority pr_min.
+#		pr_min, pr_min_f = np.inf, np.inf
+#		for n in open_dir:
+#			f = g[n] + problem.h(n)
+#			pr = max(f, 2 * g[n])
+#			pr_min = min(pr_min, pr)
+#			pr_min_f = min(pr_min_f, f)
+
+#		return pr_min, pr_min_f, min(g.values())
+
+#	def find_key(pr_min, open_dir, g):
+#		"""Finds key in open_dir with value equal to pr_min
+#		and minimum g value."""
+#		m = np.inf
+#		node = Node(-1)
+#		for n in open_dir:
+#			pr = max(g[n] + problem.h(n), 2 * g[n])
+#			if pr == pr_min:
+#				if g[n] < m:
+#					m = g[n]
+#					node = n
+
+#		return node
+
+#	while openF and openB:
+#		pr_min_f, f_min_f, g_min_f = find_min(openF, gF)
+#		pr_min_b, f_min_b, g_min_b = find_min(openB, gB)
+#		C = min(pr_min_f, pr_min_b)
+
+#		if U <= max(C, f_min_f, f_min_b, g_min_f + g_min_b + e):
+#			return U
+
+#		if C == pr_min_f:
+#			# Extend forward
+#			U, openF, closedF, gF = extend(U, openF, openB, gF, gB, closedF)
+#		else:
+#			# Extend backward
+#			U, openB, closedB, gB = extend(U, openB, openF, gB, gF, closedB)
+
+#	return np.inf
+
+# ______________________________________________________________________________
+# Informed (Heuristic) Search
+
+#greedy_best_first_graph_search = best_first_graph_search
+
+# Greedy best-first search is accomplished by specifying f(n) = h(n).
+
+#def recursive_best_first_search(problem, h=None):
+#	"""[Figure 3.26]"""
+#	h = memoize(h or problem.h, 'h')
+
+#	def RBFS(problem, node, flimit):
+#		if problem.goal_test(node.state):
+#			return node, 0  # (The second value is immaterial)
+#		successors = node.expand(problem)
+#		if len(successors) == 0:
+#			return None, np.inf
+#		for s in successors:
+#			s.f = max(s.path_cost + h(s), node.f)
+#		while True:
+#			# Order by lowest f value
+#			successors.sort(key=lambda x: x.f)
+#			best = successors[0]
+#			if best.f > flimit:
+#					return None, best.f
+#			if len(successors) > 1:
+#					alternative = successors[1].f
+#			else:
+#					alternative = np.inf
+#			result, best.f = RBFS(problem, best, min(flimit, alternative))
+#			if result is not None:
+#					return result, best.f
+
+#	node = Node(problem.initial)
+#	node.f = h(node)
+#	result, bestf = RBFS(problem, node, np.inf)
+#	return result
 
 #def hill_climbing(problem):
 #    """
@@ -531,64 +758,6 @@ def astar_search(problem, h=None, display=False):
 
 # ______________________________________________________________________________
 # Graphs and Graph Problems
-
-# Needed
-class Graph:
-	"""A graph connects nodes (vertices) by edges (links). Each edge can also
-	have a length associated with it. The constructor call is something like:
-		g = Graph({'A': {'B': 1, 'C': 2})
-	this makes a graph with 3 nodes, A, B, and C, with an edge of length 1 from
-	A to B,  and an edge of length 2 from A to C. You can also do:
-		g = Graph({'A': {'B': 1, 'C': 2}, directed=False)
-	This makes an undirected graph, so inverse links are also added. The graph
-	stays undirected; if you add more links with g.connect('B', 'C', 3), then
-	inverse link is also added. You can use g.nodes() to get a list of nodes,
-	g.get('A') to get a dict of links out of A, and g.get('A', 'B') to get the
-	length of the link from A to B. 'Lengths' can actually be any object at
-	all, and nodes can be any hashable object."""
-
-	locations = {}
-	least_costs = {}
-
-	def __init__(self, graph_dict=None, directed=True):
-		self.graph_dict = graph_dict or {}
-		self.directed = directed
-		if not directed:
-			self.make_undirected()
-
-	def make_undirected(self):
-		"""Make a digraph into an undirected graph by adding symmetric edges."""
-		for a in list(self.graph_dict.keys()):
-			for (b, dist) in self.graph_dict[a].items():
-				self.connect1(b, a, dist)
-
-	def connect(self, A, B, distance=1):
-		"""Add a link from A and B of given distance, and also add the inverse
-		link if the graph is undirected."""
-		self.connect1(A, B, distance)
-		if not self.directed:
-			self.connect1(B, A, distance)
-
-	def connect1(self, A, B, distance):
-		"""Add a link from A to B of given distance, in one direction only."""
-		self.graph_dict.setdefault(A, {})[B] = distance
-
-	def get(self, a, b=None):
-		"""Return a link distance or a dict of {node: distance} entries.
-		.get(a,b) returns the distance or None;
-		.get(a) returns a dict of {node: distance} entries, possibly {}."""
-		links = self.graph_dict.setdefault(a, {})
-		if b is None:
-			return links
-		else:
-			return links.get(b)
-
-	def nodes(self):
-		"""Return a list of nodes in the graph."""
-		s1 = set([k for k in self.graph_dict.keys()])
-		s2 = set([k2 for v in self.graph_dict.values() for k2, v2 in v.items()])
-		nodes = s1.union(s2)
-		return list(nodes)
 
 #def UndirectedGraph(graph_dict=None):
 #    """Build a Graph where every edge (including future ones) goes both ways."""
@@ -705,45 +874,6 @@ class Graph:
 #                               Q=(145, 20), NSW=(145, 32), T=(145, 42),
 #                               V=(145, 37))
 
-# NEEDED
-class GraphProblem(Problem):
-	"""The problem of searching a graph from one node to another."""
-
-	def __init__(self, initial, goal, graph):
-		super().__init__(initial, goal)
-		self.graph = graph
-
-	def actions(self, state):
-		"""The actions at a graph node are just its neighbors."""
-		return list(self.graph.get(state).keys())
-
-	def result(self, state, action):
-		"""The result of going to a neighbor is just that neighbor."""
-		return action
-
-	def path_cost(self, cost, state1, action, state2):
-		return cost + (self.graph.get(state1, state2) or np.inf)
-
-	def find_min_edge(self):
-		"""Find minimum value of edges."""
-		m = np.inf
-		for d in self.graph.graph_dict.values():
-			local_min = min(d.values())
-			m = min(m, local_min)
-
-		return m
-
-	def h(self, node):
-		"""h function is straight-line distance from a node's state to goal."""
-		locs = getattr(self.graph, 'locations', None)
-		if locs:
-			if type(node) is str:
-				return int(distance(locs[node], locs[self.goal]))
-
-			return int(distance(locs[node.state], locs[self.goal]))
-		else:
-			return np.inf
-
 #class GraphProblemStochastic(GraphProblem):
 #    """
 #    A version of GraphProblem where an action can lead to
@@ -758,27 +888,3 @@ class GraphProblem(Problem):
 
 #    def path_cost(self, cost, state1, action, state2):
 #        raise NotImplementedError
-
-if __name__ == "__main__":
-
-	# Extract parameter 1: filename of graph
-	# Extract parameter 2: "method" function used
-
-	graph = Graph(dict(
-		A=dict(C=5, D=6),
-		B=dict(A=4, C=4),
-		C=dict(A=5, E=6, F=7),
-		D=dict(A=6, C=5, E=7),
-		E=dict(C=6, D=8),
-		F=dict(C=7)
-	))
-	result = breadth_first_graph_search(GraphProblem("B", "E", graph))
-	print(result)
-
-	# Output paramter 1
-	# Output paramter 2
-	# \n
-	# Ouput goal node
-	# Output number (length of path)
-	# \n
-	# Output path: list of nodes
