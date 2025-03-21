@@ -6,7 +6,7 @@ then create problem instances and solve them with calls to the various search
 functions.
 """
 
-import sys
+#import sys
 from collections import deque
 
 from utils import *
