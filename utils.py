@@ -410,19 +410,23 @@ def memoize(fn, slot=None, maxsize=32):
     If slot is specified, store result in that slot of first argument.
     If slot is false, use lru_cache for caching the values."""
     if slot:
-        def memoized_fn(obj, *args):
+        def memoized_normal(obj, *args):
             if hasattr(obj, slot):
                 return getattr(obj, slot)
             else:
                 val = fn(obj, *args)
                 setattr(obj, slot, val)
                 return val
+
+        out = memoized_normal
     else:
         @functools.lru_cache(maxsize=maxsize)
-        def memoized_fn(*args):
+        def memoized_cached(*args):
             return fn(*args)
 
-    return memoized_fn
+        out = memoized_cached
+
+    return out
 
 
 def name(obj):
@@ -670,47 +674,47 @@ class PartialExpr:
         return "PartialExpr('{}', {})".format(self.op, self.lhs)
 
 
-def expr(x):
-    """Shortcut to create an Expression. x is a str in which:
-    - identifiers are automatically defined as Symbols.
-    - ==> is treated as an infix |'==>'|, as are <== and <=>.
-    If x is already an Expression, it is returned unchanged. Example:
-    >>> expr('P & Q ==> Q')
-    ((P & Q) ==> Q)
-    """
-    return eval(expr_handle_infix_ops(x), defaultkeydict(Symbol)) if isinstance(x, str) else x
+#def expr(x):
+#    """Shortcut to create an Expression. x is a str in which:
+#    - identifiers are automatically defined as Symbols.
+#    - ==> is treated as an infix |'==>'|, as are <== and <=>.
+#    If x is already an Expression, it is returned unchanged. Example:
+#    >>> expr('P & Q ==> Q')
+#    ((P & Q) ==> Q)
+#    """
+#    return eval(expr_handle_infix_ops(x), defaultkeydict(Symbol)) if isinstance(x, str) else x
 
 
 infix_ops = '==> <== <=>'.split()
 
 
-def expr_handle_infix_ops(x):
-    """Given a str, return a new str with ==> replaced by |'==>'|, etc.
-    >>> expr_handle_infix_ops('P ==> Q')
-    "P |'==>'| Q"
-    """
-    for op in infix_ops:
-        x = x.replace(op, '|' + repr(op) + '|')
-    return x
+#def expr_handle_infix_ops(x):
+#    """Given a str, return a new str with ==> replaced by |'==>'|, etc.
+#    >>> expr_handle_infix_ops('P ==> Q')
+#    "P |'==>'| Q"
+#    """
+#    for op in infix_ops:
+#        x = x.replace(op, '|' + repr(op) + '|')
+#    return x
 
 
-class defaultkeydict(collections.defaultdict):
-    """Like defaultdict, but the default_factory is a function of the key.
-    >>> d = defaultkeydict(len); d['four']
-    4
-    """
+#class defaultkeydict(collections.defaultdict):
+#    """Like defaultdict, but the default_factory is a function of the key.
+#    >>> d = defaultkeydict(len); d['four']
+#    4
+#    """
 
-    def __missing__(self, key):
-        self[key] = result = self.default_factory(key)
-        return result
+#    def __missing__(self, key):
+#        self[key] = result = self.default_factory(key)
+#        return result
 
 
-class hashabledict(dict):
-    """Allows hashing by representing a dictionary as tuple of key:value pairs.
-    May cause problems as the hash value may change during runtime."""
+#class hashabledict(dict):
+#    """Allows hashing by representing a dictionary as tuple of key:value pairs.
+#    May cause problems as the hash value may change during runtime."""
 
-    def __hash__(self):
-        return 1
+#    def __hash__(self):
+#        return 1
 
 
 # ______________________________________________________________________________
