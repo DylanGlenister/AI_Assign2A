@@ -6,10 +6,8 @@ then create problem instances and solve them with calls to the various search
 functions.
 """
 
-import sys
 from collections import deque
-
-#from utils import *
+import sys
 import functools
 import heapq
 import numpy as np
@@ -24,12 +22,11 @@ def distance(a, b):
 	xB, yB = b
 	return np.hypot((xA - xB), (yA - yB))
 
-# Edited
-# BUG Trying to fix the error broke this function. Using the slot param causes the pathfinding to error.
 def memoize(fn, slot=None, maxsize=32):
 	"""Memoize fn: make it remember the computed value for any argument list.
 	If slot is specified, store result in that slot of first argument.
 	If slot is false, use lru_cache for caching the values."""
+	# BUG Trying to use the slot causes a TypeError. Unable to fix it.
 	if slot:
 		def memoized_normal(obj, *args):
 			if hasattr(obj, slot):
@@ -104,7 +101,6 @@ class PriorityQueue:
 			raise KeyError(str(key) + " is not in the priority queue")
 		heapq.heapify(self.heap)
 
-# NEEDED
 class Problem:
 	"""The abstract class for a formal problem. You should subclass
 	this and implement the methods actions and result, and possibly
@@ -154,7 +150,6 @@ class Problem:
 		and related algorithms try to maximize this value."""
 		raise NotImplementedError
 
-# NEEDED
 class Node:
 	"""A node in a search tree. Contains a pointer to the parent (the node
 	that this is a successor of) and to the actual state for this node. Note
@@ -221,7 +216,6 @@ class Node:
 		# with the same state in a Hash Table
 		return hash(self.state)
 
-# Needed
 class Graph:
 	"""A graph connects nodes (vertices) by edges (links). Each edge can also
 	have a length associated with it. The constructor call is something like:
@@ -278,7 +272,6 @@ class Graph:
 		nodes = s1.union(s2)
 		return list(nodes)
 
-# NEEDED
 class GraphProblem(Problem):
 	"""The problem of searching a graph from one node to another."""
 
@@ -319,7 +312,6 @@ class GraphProblem(Problem):
 		else:
 			return np.inf
 
-# NEEDED
 def depth_first_graph_search(problem):
 	"""
 	[Figure 3.7]
@@ -341,7 +333,6 @@ def depth_first_graph_search(problem):
 						if child.state not in explored and child not in frontier)
 	return None
 
-# NEEDED
 def breadth_first_graph_search(problem):
 	"""[Figure 3.11]
 	Note that this function can be implemented in a
@@ -363,7 +354,6 @@ def breadth_first_graph_search(problem):
 				frontier.append(child)
 	return None
 
-# NEEDED
 def best_first_graph_search(problem, f, display=False):
 	"""Search the nodes with the lowest f scores first.
 	You specify the function f(node) that you want to minimize; for example,
@@ -399,6 +389,7 @@ def uniform_cost_search(problem, display=False):
 	"""[Figure 3.14]"""
 	return best_first_graph_search(problem, lambda node: node.path_cost, display)
 
+# Is this needed?
 def depth_limited_search(problem, limit=50):
 	"""[Figure 3.17]"""
 
@@ -420,6 +411,7 @@ def depth_limited_search(problem, limit=50):
 	# Body of depth_limited_search:
 	return recursive_dls(Node(problem.initial), problem, limit)
 
+# Is this needed?
 def iterative_deepening_search(problem):
 	"""[Figure 3.18]"""
 	for depth in range(sys.maxsize):
@@ -427,7 +419,6 @@ def iterative_deepening_search(problem):
 		if result != 'cutoff':
 			return result
 
-# NEEDED
 def astar_search(problem, h=None, display=False):
 	"""A* search is best-first graph search with f(n) = g(n)+h(n).
 	You need to specify the h function when you call astar_search, or
@@ -436,11 +427,8 @@ def astar_search(problem, h=None, display=False):
 	h = memoize(h or problem.h)
 	return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
 
-if __name__ == "__main__":
-
-	# Extract parameter 1: filename of graph
-	# Extract parameter 2: "method" function used
-
+def import_graph(_file: str):
+	"""Import the graph data. Create the GraphProblem and return it."""
 	graph = Graph(dict(
 		A=dict(C=5, D=6),
 		B=dict(A=4, C=4),
@@ -458,13 +446,50 @@ if __name__ == "__main__":
 		F=(7,5)
 	)
 	problem = GraphProblem("B", "E", graph)
-	result = astar_search(problem)
-	print(result)
+	return problem
+
+def select_method(_method: str):
+	"""Return a pathfinding function."""
+	match _method:
+		case "DFS":
+			return depth_first_graph_search
+		case "BFS":
+			return breadth_first_graph_search
+		case "GBFS":
+			return uniform_cost_search
+		case "AS":
+			return astar_search
+		case _:
+			return None
+
+if __name__ == "__main__":
+
+	if len(sys.argv) < 3:
+		print("Missing arguments: python search.py <filename> <method>")
+		quit()
+
+	if len(sys.argv) > 3:
+		print("Excess arguments: python search.py <filename> <method>")
+
+	# Extract parameter 1: filename of graph
+	graph_problem = import_graph(sys.argv[1])
+
+	# Extract parameter 2: "method" function used
+	method = select_method(sys.argv[2])
+
+	if method is None:
+		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS")
+		quit()
+
+	result = method(graph_problem)
 
 	# Output paramter 1
+	print(sys.argv[1])
 	# Output paramter 2
+	print(sys.argv[2])
 	# \n
 	# Ouput goal node
+	print(result)
 	# Output number (length of path)
 	# \n
 	# Output path: list of nodes
