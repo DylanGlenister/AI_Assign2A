@@ -28,7 +28,6 @@ Needs to be called like: *python search.py \<filename> \<method>*
 | Your search strategy 2 | An informed method to find a shortest path (with least moves) to reach the goal. | CUS2 |
 
 ## TODO
-- [ ] Strip unneeded code from search and utils.
 - [ ] Import text file.
-- [ ] Verify four main algorithms work.
+- [ ] Add full path output to alogrithms.
 - [ ] Implement two custom algorithms.
