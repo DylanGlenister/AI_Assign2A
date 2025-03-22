@@ -38,13 +38,11 @@ def memoize(fn, slot=None, maxsize=32):
 				val = fn(obj, *args)
 				setattr(obj, slot, val)
 				return val
-
 		out = memoized_normal
 	else:
 		@functools.lru_cache(maxsize=maxsize)
 		def memoized_cached(*args):
 			return fn(*args)
-
 		out = memoized_cached
 
 	return out
@@ -374,7 +372,8 @@ def best_first_graph_search(problem, f, display=False):
 	There is a subtlety: the line "f = memoize(f, 'f')" means that the f
 	values will be cached on the nodes as they are computed. So after doing
 	a best first search you can examine the f values of the path returned."""
-	f = memoize(f, 'f')
+	#f = memoize(f, 'f')
+	f = memoize(f)
 	node = Node(problem.initial)
 	frontier = PriorityQueue('min', f)
 	frontier.append(node)
@@ -433,7 +432,8 @@ def astar_search(problem, h=None, display=False):
 	"""A* search is best-first graph search with f(n) = g(n)+h(n).
 	You need to specify the h function when you call astar_search, or
 	else in your Problem subclass."""
-	h = memoize(h or problem.h, 'h')
+	#h = memoize(h or problem.h, 'h')
+	h = memoize(h or problem.h)
 	return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
 
 if __name__ == "__main__":
@@ -458,7 +458,7 @@ if __name__ == "__main__":
 		F=(7,5)
 	)
 	problem = GraphProblem("B", "E", graph)
-	result = breadth_first_graph_search(problem)
+	result = astar_search(problem)
 	print(result)
 
 	# Output paramter 1
