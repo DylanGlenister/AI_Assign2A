@@ -1,11 +1,20 @@
 # Assignment 2 A
 Pathfinding algorithms.
 
+## Requirements
 **NOTE 1:** The objective is to reach one of the destination nodes.
 
 **NOTE 2:** *When all else is equal*, nodes should be expanded according to the ascending order, i.e., from the smaller to the bigger nodes. For instance, when all else are being equal between nodes 4 and 7, Node 4 should be expanded before Node 7. Furthermore, *when all else is equal*, the two nodes N 1 and N 2 *on two different branches* of the search tree should be expanded according to the chronological order: if node N 1 is added BEFORE node N 2 then N 1 is expanded BEFORE node N 2.
 
-## Required strategies
+Needs to be called like: *python search.py \<filename> \<method>*
+
+| Output should be: | |
+| - | - |
+| filename | method |
+| goal | number_of_nodes |
+| path |
+
+### Required strategies
 | Search Strategy | Description | Method |
 | -- | -- | -- |
 | Uninformed |
