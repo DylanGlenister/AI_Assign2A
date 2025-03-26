@@ -428,14 +428,24 @@ def astar_search(problem, h=None, display=False):
 	return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
 
 def import_graph(_file: str):
-	"""Import the graph data. Create the GraphProblem and return it."""
+	"""Import the graph data. Create the GraphProblem and return it."""''
+	class importer:
+		initial = None
+		goal = None
+
+	file_import = importer()
+	graph = Graph()
+	GraphProblem(file_import.initial, file_import.goal, graph)
+
+def create_graph():
 	graph = Graph(dict(
 		A=dict(C=5, D=6),
 		B=dict(A=4, C=4),
 		C=dict(A=5, E=6, F=7),
 		D=dict(A=6, C=5, E=7),
-		E=dict(C=6, D=8),
-		F=dict(C=7)
+		E=dict(C=6, D=8, G=6),
+		F=dict(C=7, G=6),
+		G=dict(E=6, F=6)
 	))
 	graph.locations = dict(
 		A=(4,1),
@@ -443,10 +453,13 @@ def import_graph(_file: str):
 		C=(4,4),
 		D=(6,3),
 		E=(5,6),
-		F=(7,5)
+		F=(7,5),
+		G=(7,7)
 	)
-	problem = GraphProblem("B", "E", graph)
-	return problem
+	initial = "G"
+	goal = "A"
+	problem = GraphProblem(initial, goal, graph)
+	return problem, goal
 
 def select_method(_method: str):
 	"""Return a pathfinding function."""
@@ -472,7 +485,13 @@ if __name__ == "__main__":
 		print("Excess arguments: python search.py <filename> <method>")
 
 	# Extract parameter 1: filename of graph
-	graph_problem = import_graph(sys.argv[1])
+	#graph_result = import_graph(sys.argv[1])
+	#if graph_result is None:
+	#	print("File incorrectly formetted")
+	#	quit()
+	#graph_problem, goal = graph_result
+
+	graph_problem, goal = create_graph()
 
 	# Extract parameter 2: "method" function used
 	method = select_method(sys.argv[2])
@@ -484,12 +503,15 @@ if __name__ == "__main__":
 	result = method(graph_problem)
 
 	# Output paramter 1
-	print(sys.argv[1])
+	print("filename=", sys.argv[1], sep="", end=" ")
 	# Output paramter 2
-	print(sys.argv[2])
+	print("method=", sys.argv[2], sep="")
 	# \n
 	# Ouput goal node
-	print(result)
+	print("goal=", goal, sep="", end= " ")
+	if (result is not None):
 	# Output number (length of path)
+		print("number of nodes=", len(result.solution()), sep="")
 	# \n
 	# Output path: list of nodes
+		print("path", result.solution(), sep="")
