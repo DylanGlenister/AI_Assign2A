@@ -430,6 +430,8 @@ def astar_search(problem, h=None, display=False):
 def import_graph(_file: str):
 	"""Import the graph data. Create the GraphProblem and return it."""''
 	class importer:
+		nodes = []
+		edges = []
 		initial = None
 		goal = None
 
@@ -505,15 +507,15 @@ if __name__ == "__main__":
 	result = method(graph_problem)
 
 	# Output paramter 1
-	print("filename=", sys.argv[1], sep="", end=" ")
+	print("filename=", sys.argv[1], sep="", end=" | ")
 	# Output paramter 2
 	print("method=", sys.argv[2], sep="")
 	# \n
 	# Ouput goal node
-	print("goal=", goal, sep="", end= " ")
+	print("goal=", goal, sep="", end= " | ")
 	if (result is not None):
 	# Output number (length of path)
 		print("number of nodes=", len(result.solution()), sep="")
 	# \n
 	# Output path: list of nodes
-		print("path", result.solution(), sep="")
+		print("path=", result.solution(), sep="")
