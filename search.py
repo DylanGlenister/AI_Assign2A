@@ -472,6 +472,8 @@ def select_method(_method: str):
 			return uniform_cost_search
 		case "AS":
 			return astar_search
+		case "IDS":
+			return iterative_deepening_search
 		case _:
 			return None
 
