@@ -29,5 +29,6 @@ Needs to be called like: *python search.py \<filename> \<method>*
 
 ## TODO
 - [X] Add full path output to alogrithms.
+- [X] Implement custom uninformed algorithm.
+- [ ] Implement custom informed algorithm.
 - [ ] Import text file.
-- [ ] Implement two custom algorithms.
