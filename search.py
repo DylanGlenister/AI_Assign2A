@@ -10,6 +10,7 @@ from collections import deque
 import sys
 import functools
 import heapq
+import re
 import numpy as np
 
 def is_in(elt, seq):
@@ -427,23 +428,98 @@ def astar_search(problem, h=None, display=False):
 	h = memoize(h or problem.h)
 	return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
 
-def import_graph(_file: str):
-	"""Import the graph data. Create the GraphProblem and return it."""''
-	class importer:
-		nodes = []
-		edges = []
-		initial = None
-		goal = None
+def import_graph(_file):
+	"""Import the graph data. Create the GraphProblem and return it, also return the goal."""
 
-	file_import = importer()
-	graph = Graph()
-	GraphProblem(file_import.initial, file_import.goal, graph)
+	def parse_graph(_file):
+		# Import the text file into a variable
+		with open(_file, 'r') as _file:
+			lines = _file.readlines()
+
+		nodes: dict[int, tuple[int, int]] = {}
+		edges: dict[int, dict[int, int]] = {}
+		origin: int = -1
+		destinations: list[int] = []
+		section: str | None = None
+
+		for line in lines:
+			# Remove whitespaces
+			line = line.strip()
+			# Skip empty lines
+			if not line:
+				continue
+
+			# Switch the section
+			if line.startswith("Nodes:"):
+				section = "nodes"
+				continue
+			elif line.startswith("Edges:"):
+				section = "edges"
+				continue
+			elif line.startswith("Origin:"):
+				section = "origin"
+				continue
+			elif line.startswith("Destinations:"):
+				section = "destinations"
+				continue
+
+			match section:
+				case "nodes":
+					match = re.match(r'(\d+): \((\d+),(\d+)\)', line)
+					if match:
+						node, x, y = match.groups()
+						# Initial store the the nodes using the number ID, duplicating an ID will overwrite it.
+						nodes[int(node)] = (int(x), int(y))
+
+				case "edges":
+					match = re.match(r'\((\d+),(\d+)\): (\d+)', line)
+					if match:
+						n1, n2, cost = match.groups()
+						n1, n2, cost = int(n1), int(n2), int(cost)
+						if n1 not in edges:
+							edges[n1] = {}
+						edges[n1][n2] = cost
+
+				case "origin":
+					origin = int(line)
+
+				case "destinations":
+					destinations = [int(val) for val in line.split(';')]
+
+		# Sorting the dictionaries, dunno if this is needed but I like it
+		nodes = dict(sorted(nodes.items()))
+		edges = dict(sorted(edges.items()))
+		return nodes, edges, origin, destinations
+
+	def create_graph_problem(
+		_nodes: dict[int, tuple[int, int]],
+		_edges: dict[int, dict[int, int]],
+		_origin: int,
+		_destinations: list[int]
+	):
+		edges = {chr(64 + key): {chr(64 + k): v for k, v in value.items()} for key, value in _edges.items()}
+		locations = {chr(64 + key): value for key, value in _nodes.items()}
+		origin = chr(64 + _origin)
+		goals = [chr(64 + value) for value in _destinations]
+
+		#print("Edges:", formatted_edges, sep=" ")
+		#print("Locations:", formatted_locations, sep=" ")
+		#print("Origin:", formatted_origin, sep=" ")
+		#print("Destinations:", formatted_destinations, sep=" ")
+
+		graph = Graph(edges)
+		graph.locations = locations
+		return GraphProblem(origin, goals, graph), goals
+
+	nodes, edges, origin, destinations = parse_graph(_file)
+	problem, goals = create_graph_problem(nodes, edges, origin, destinations)
+	return problem, goals
 
 def create_graph():
 	graph = Graph(dict(
 		A=dict(C=5, D=6),
 		B=dict(A=4, C=4),
-		C=dict(A=5, E=6, F=7),
+		C=dict(A=5, B=5, E=6, F=7),
 		D=dict(A=6, C=5, E=7),
 		E=dict(C=6, D=8, G=6),
 		F=dict(C=7, G=6),
@@ -459,7 +535,7 @@ def create_graph():
 		G=(7,7)
 	)
 	initial = "G"
-	goal = "A"
+	goal = ["A", "D"]
 	problem = GraphProblem(initial, goal, graph)
 	return problem, goal
 
@@ -495,7 +571,8 @@ if __name__ == "__main__":
 	#	quit()
 	#graph_problem, goal = graph_result
 
-	graph_problem, goal = create_graph()
+	#graph_problem, goals = create_graph()
+	graph_problem, goals = import_graph(sys.argv[1])
 
 	# Extract parameter 2: "method" function used
 	method = select_method(sys.argv[2])
@@ -512,10 +589,13 @@ if __name__ == "__main__":
 	print("method=", sys.argv[2], sep="")
 	# \n
 	# Ouput goal node
-	print("goal=", goal, sep="", end= " | ")
+	print("goal=", goals, sep="", end="")
+
 	if (result is not None):
 	# Output number (length of path)
-		print("number of nodes=", len(result.solution()), sep="")
+		print(" | number of nodes=", len(result.solution()), sep="")
 	# \n
 	# Output path: list of nodes
 		print("path=", result.solution(), sep="")
+	else:
+		print("Error")
