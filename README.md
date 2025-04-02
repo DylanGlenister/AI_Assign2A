@@ -26,9 +26,3 @@ Needs to be called like: *python search.py \<filename> \<method>*
 | Custom |
 | Your search strategy 1 | An uninformed method to find a path to reach the goal. | CUS1 |
 | Your search strategy 2 | An informed method to find a shortest path (with least moves) to reach the goal. | CUS2 |
-
-## TODO
-- [X] Add full path output to alogrithms.
-- [X] Implement custom uninformed algorithm.
-- [X] Import text file.
-- [ ] Implement custom informed algorithm.
