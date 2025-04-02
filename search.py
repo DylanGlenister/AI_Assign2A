@@ -517,10 +517,10 @@ def import_graph(_file):
 		origin = chr(64 + _origin)
 		goals = [chr(64 + value) for value in _destinations]
 
-		#print("Edges:", formatted_edges, sep=" ")
-		#print("Locations:", formatted_locations, sep=" ")
-		#print("Origin:", formatted_origin, sep=" ")
-		#print("Destinations:", formatted_destinations, sep=" ")
+		print("Edges:", edges, sep=" ")
+		print("Locations:", locations, sep=" ")
+		print("Origin:", origin, sep=" ")
+		print("Destinations:", goals, sep=" ")
 
 		graph = Graph(edges)
 		graph.locations = locations
@@ -529,6 +529,28 @@ def import_graph(_file):
 	nodes, edges, origin, destinations = parse_graph(_file)
 	problem, goals = create_graph_problem(nodes, edges, origin, destinations)
 	return problem, goals
+
+def create_graph():
+	graph = Graph(dict(
+		A=dict(C=5, D=6),
+		B=dict(A=4, C=4),
+		C=dict(A=5, B=5, E=6, F=7),
+		D=dict(A=6, C=5, E=7),
+		E=dict(C=6, D=8),
+		F=dict(C=7)
+	))
+	graph.locations = dict(
+		A=(4,1),
+		B=(2,2),
+		C=(4,4),
+		D=(6,3),
+		E=(5,6),
+		F=(7,5)
+	)
+	initial = "B"
+	goal = ["E", "D"]
+	problem = GraphProblem(initial, goal, graph)
+	return problem, goal
 
 def select_method(_method: str):
 	"""Return a pathfinding function."""
@@ -557,7 +579,8 @@ if __name__ == "__main__":
 	if len(sys.argv) > 3:
 		print("Excess arguments: python search.py <filename> <method>")
 
-	graph_problem, goals = import_graph(sys.argv[1])
+	graph_problem, goals = create_graph()
+	#graph_problem, goals = import_graph(sys.argv[1])
 
 	# Extract parameter 2: "method" function used
 	method = select_method(sys.argv[2])
