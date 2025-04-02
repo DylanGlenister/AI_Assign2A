@@ -530,30 +530,6 @@ def import_graph(_file):
 	problem, goals = create_graph_problem(nodes, edges, origin, destinations)
 	return problem, goals
 
-def create_graph():
-	graph = Graph(dict(
-		A=dict(C=5, D=6),
-		B=dict(A=4, C=4),
-		C=dict(A=5, B=5, E=6, F=7),
-		D=dict(A=6, C=5, E=7),
-		E=dict(C=6, D=8, G=6),
-		F=dict(C=7, G=6),
-		G=dict(E=6, F=6)
-	))
-	graph.locations = dict(
-		A=(4,1),
-		B=(2,2),
-		C=(4,4),
-		D=(6,3),
-		E=(5,6),
-		F=(7,5),
-		G=(7,7)
-	)
-	initial = "G"
-	goal = ["A", "D"]
-	problem = GraphProblem(initial, goal, graph)
-	return problem, goal
-
 def select_method(_method: str):
 	"""Return a pathfinding function."""
 	match _method:
@@ -565,7 +541,7 @@ def select_method(_method: str):
 			return uniform_cost_search
 		case "AS":
 			return astar_search
-		case "IDS":
+		case "IDS" | "CUS1":
 			return iterative_deepening_search
 		case "BS" | "CUS2":
 			return beam_search
@@ -581,21 +557,13 @@ if __name__ == "__main__":
 	if len(sys.argv) > 3:
 		print("Excess arguments: python search.py <filename> <method>")
 
-	# Extract parameter 1: filename of graph
-	#graph_result = import_graph(sys.argv[1])
-	#if graph_result is None:
-	#	print("File incorrectly formetted")
-	#	quit()
-	#graph_problem, goal = graph_result
-
-	#graph_problem, goals = create_graph()
 	graph_problem, goals = import_graph(sys.argv[1])
 
 	# Extract parameter 2: "method" function used
 	method = select_method(sys.argv[2])
 
 	if method is None:
-		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS, BS, CUS1, CUS2")
+		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS, CUS1, CUS2, IDS, BS")
 		quit()
 
 	result = method(graph_problem)
