@@ -1,9 +1,7 @@
 """
-Search (Chapters 3-4)
+Assignment 2A Pathfinding algorithms.
 
-The way to use this code is to subclass Problem to create a class of problems,
-then create problem instances and solve them with calls to the various search
-functions.
+Uses code from AIMA Chapters 3-4
 """
 
 from collections import deque
