@@ -427,6 +427,22 @@ def astar_search(problem, h=None, display=False):
 	h = memoize(h or problem.h)
 	return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
 
+def beam_search(problem, k=2):
+    frontier = PriorityQueue('min', lambda n: n.path_cost)
+    frontier.append(Node(problem.initial))
+    explored = set()
+    while frontier:
+        if len(frontier) > k:
+            frontier.heap = sorted(frontier.heap)[:k]
+        node = frontier.pop()
+        if problem.goal_test(node.state):
+            return node
+        explored.add(node.state)
+        children = list(node.expand(problem))
+        new_candidates = [child for child in children if child.state not in explored]
+        frontier.extend(new_candidates)
+    return None
+
 def import_graph(_file: str):
 	"""Import the graph data. Create the GraphProblem and return it."""''
 	class importer:
@@ -476,6 +492,8 @@ def select_method(_method: str):
 			return astar_search
 		case "IDS":
 			return iterative_deepening_search
+		case "BS" | "CUS2":
+			return beam_search
 		case _:
 			return None
 
@@ -501,7 +519,7 @@ if __name__ == "__main__":
 	method = select_method(sys.argv[2])
 
 	if method is None:
-		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS")
+		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS, BS, CUS1, CUS2")
 		quit()
 
 	result = method(graph_problem)
