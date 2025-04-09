@@ -335,11 +335,11 @@ def depth_first_graph_search(problem):
 	while frontier:
 		node = frontier.pop()
 		if problem.goal_test(node.state):
-			return node
+			return node, len(explored)
 		explored.add(node.state)
 		frontier.extend(child for child in node.expand(problem)
 						if child.state not in explored and child not in frontier)
-	return None
+	return None, len(explored)
 
 def breadth_first_graph_search(problem):
 	"""[Figure 3.11]
@@ -349,7 +349,7 @@ def breadth_first_graph_search(problem):
 	"""
 	node = Node(problem.initial)
 	if problem.goal_test(node.state):
-		return node
+		return node, int(1)
 	frontier = deque([node])
 	explored = set()
 	while frontier:
@@ -358,9 +358,9 @@ def breadth_first_graph_search(problem):
 		for child in node.expand(problem):
 			if child.state not in explored and child not in frontier:
 				if problem.goal_test(child.state):
-					return child
+					return child, len(explored)
 				frontier.append(child)
-	return None
+	return None, len(explored)
 
 def best_first_graph_search(problem, f, display=False):
 	"""Search the nodes with the lowest f scores first.
@@ -381,7 +381,7 @@ def best_first_graph_search(problem, f, display=False):
 		if problem.goal_test(node.state):
 			if display:
 				print(len(explored), "paths have been expanded and", len(frontier), "paths remain in the frontier")
-			return node
+			return node, len(explored)
 		explored.add(node.state)
 		for child in node.expand(problem):
 			if child.state not in explored and child not in frontier:
@@ -390,42 +390,52 @@ def best_first_graph_search(problem, f, display=False):
 				if f(child) < frontier[child]:
 					del frontier[child]
 					frontier.append(child)
-	return None
+	return None, len(explored)
 
 # This is effectively the greedy best first search
-def uniform_cost_search(problem, display=False):
+def uniform_cost_search(problem: GraphProblem, display=False):
 	"""[Figure 3.14]"""
 	return best_first_graph_search(problem, lambda node: node.path_cost, display)
 
-# Is this needed?
-def depth_limited_search(problem, limit=50):
+def depth_limited_search(problem: GraphProblem, limit=50):
 	"""[Figure 3.17]"""
 
-	def recursive_dls(node, problem, limit):
+	def recursive_dls(node: Node, problem: GraphProblem, limit: int):
+		minLimit = limit
 		if problem.goal_test(node.state):
-			return node
+			return node, minLimit
 		elif limit == 0:
-			return 'cutoff'
+			return 'cutoff', minLimit
 		else:
 			cutoff_occurred = False
 			for child in node.expand(problem):
-					result = recursive_dls(child, problem, limit - 1)
+					result, minLimit = recursive_dls(child, problem, limit - 1)
 					if result == 'cutoff':
 						cutoff_occurred = True
 					elif result is not None:
-						return result
-			return 'cutoff' if cutoff_occurred else None
+						return result, minLimit
+			# If none is returned it means no path can be found
+			if cutoff_occurred:
+				return 'cutoff', minLimit
+			else:
+				return None, minLimit
 
 	# Body of depth_limited_search:
 	return recursive_dls(Node(problem.initial), problem, limit)
 
-# Is this needed?
 def iterative_deepening_search(problem):
 	"""[Figure 3.18]"""
+
+	total = 0
 	for depth in range(sys.maxsize):
-		result = depth_limited_search(problem, depth)
+		result, limit = depth_limited_search(problem, depth)
+		# If limit is zero, the number of nodes checked is the depth
+		total += depth - limit
 		if result != 'cutoff':
-			return result
+			return result, total
+
+	# Stupid fallback to shut python up
+	return None, int(0)
 
 def astar_search(problem, h=None, display=False):
 	"""A* search is best-first graph search with f(n) = g(n)+h(n).
@@ -444,12 +454,12 @@ def beam_search(problem, k=2):
 			frontier.heap = sorted(frontier.heap)[:k]
 		node = frontier.pop()
 		if problem.goal_test(node.state):
-			return node
+			return node, len(explored)
 		explored.add(node.state)
 		children = list(node.expand(problem))
 		new_candidates = [child for child in children if child.state not in explored]
 		frontier.extend(new_candidates)
-	return None
+	return None, len(explored)
 
 def import_graph(_file):
 	"""Import the graph data. Create the GraphProblem and return it, also return the goal."""
@@ -607,7 +617,8 @@ if __name__ == "__main__":
 		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS, CUS1, CUS2, IDS, BS")
 		quit()
 
-	result = method(graph_problem)
+	#result, count = iterative_deepening_search(graph_problem)
+	result, count = method(graph_problem)
 
 	# Output paramter 1
 	print("filename=", sys.argv[1], sep="", end=" | ")
@@ -615,13 +626,13 @@ if __name__ == "__main__":
 	print("method=", sys.argv[2], sep="")
 	# \n
 	# Ouput goal node
-	print("goal=", goals, sep="", end="")
+	print("goal=", goals, sep="", end=" | ")
 
-	if (result is not None):
 	# Output number (length of path)
-		print(" | number of nodes=", len(result.solution()), sep="")
+	print("number of nodes=", count, sep="")
 	# \n
-	# Output path: list of nodes
+	if (result is not None):
+		# Output path: list of nodes
 		print("path=", result.solution(), sep="")
 	else:
-		print("Error")
+		print("No path found!")
