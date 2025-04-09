@@ -15,7 +15,7 @@ def is_in(elt, seq):
 	"""Similar to (elt in seq), but compares with 'is', not '=='."""
 	return any(x is elt for x in seq)
 
-def distance(a, b):
+def distance(a: tuple, b: tuple):
 	"""The distance between two (x, y) points."""
 	xA, yA = a
 	xB, yB = b
@@ -320,7 +320,7 @@ class GraphProblem(Problem):
 		else:
 			return np.inf
 
-def depth_first_graph_search(problem):
+def depth_first_graph_search(problem: GraphProblem) -> tuple[Node | None, int]:
 	"""
 	[Figure 3.7]
 	Search the deepest nodes in the search tree first.
@@ -341,7 +341,7 @@ def depth_first_graph_search(problem):
 						if child.state not in explored and child not in frontier)
 	return None, len(explored)
 
-def breadth_first_graph_search(problem):
+def breadth_first_graph_search(problem: GraphProblem) -> tuple[Node | None, int]:
 	"""[Figure 3.11]
 	Note that this function can be implemented in a
 	single line as below:
@@ -362,7 +362,7 @@ def breadth_first_graph_search(problem):
 				frontier.append(child)
 	return None, len(explored)
 
-def best_first_graph_search(problem, f, display=False):
+def best_first_graph_search(problem: GraphProblem, f, display=False) -> tuple[Node | None, int]:
 	"""Search the nodes with the lowest f scores first.
 	You specify the function f(node) that you want to minimize; for example,
 	if f is a heuristic estimate to the goal, then we have greedy best
@@ -393,7 +393,7 @@ def best_first_graph_search(problem, f, display=False):
 	return None, len(explored)
 
 # This is effectively the greedy best first search
-def uniform_cost_search(problem: GraphProblem, display=False):
+def uniform_cost_search(problem: GraphProblem, display=False) -> tuple[Node | None, int]:
 	"""[Figure 3.14]"""
 	return best_first_graph_search(problem, lambda node: node.path_cost, display)
 
@@ -423,7 +423,7 @@ def depth_limited_search(problem: GraphProblem, limit=50):
 	# Body of depth_limited_search:
 	return recursive_dls(Node(problem.initial), problem, limit)
 
-def iterative_deepening_search(problem):
+def iterative_deepening_search(problem: GraphProblem):
 	"""[Figure 3.18]"""
 
 	total = 0
@@ -437,7 +437,7 @@ def iterative_deepening_search(problem):
 	# Stupid fallback to shut python up
 	return None, int(0)
 
-def astar_search(problem, h=None, display=False):
+def astar_search(problem: GraphProblem, h=None, display=False) -> tuple[Node | None, int]:
 	"""A* search is best-first graph search with f(n) = g(n)+h(n).
 	You need to specify the h function when you call astar_search, or
 	else in your Problem subclass."""
@@ -445,7 +445,7 @@ def astar_search(problem, h=None, display=False):
 	h = memoize(h or problem.h)
 	return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
 
-def beam_search(problem, k=2):
+def beam_search(problem: GraphProblem, k=2) -> tuple[Node | None, int]:
 	frontier = PriorityQueue('min', lambda n: n.path_cost)
 	frontier.append(Node(problem.initial))
 	explored = set()
@@ -557,28 +557,6 @@ def import_graph(_file):
 	nodes, edges, origin, destinations = parse_graph(_file)
 	problem, goals = create_graph_problem(nodes, edges, origin, destinations, False)
 	return problem, goals
-
-#def create_graph():
-#	graph = Graph(dict(
-#		A=dict(C=5, D=6),
-#		B=dict(A=4, C=4),
-#		C=dict(A=5, B=5, E=6, F=7),
-#		D=dict(A=6, C=5, E=7),
-#		E=dict(C=6, D=8),
-#		F=dict(C=7)
-#	))
-#	graph.locations = dict(
-#		A=(4,1),
-#		B=(2,2),
-#		C=(4,4),
-#		D=(6,3),
-#		E=(5,6),
-#		F=(7,5)
-#	)
-#	initial = "B"
-#	goal = ["E", "D"]
-#	problem = GraphProblem(initial, goal, graph)
-#	return problem, goal
 
 def select_method(_method: str):
 	"""Return a pathfinding function."""
