@@ -517,12 +517,23 @@ def import_graph(_file):
 		_nodes: dict[int, tuple[int, int]],
 		_edges: dict[int, dict[int, int]],
 		_origin: int,
-		_destinations: list[int]
+		_destinations: list[int],
+		_useChar: bool = True
 	):
-		edges = {chr(64 + key): {chr(64 + k): v for k, v in value.items()} for key, value in _edges.items()}
-		locations = {chr(64 + key): value for key, value in _nodes.items()}
-		origin = chr(64 + _origin)
-		goals = [chr(64 + value) for value in _destinations]
+		edges = {}
+		locations = {}
+		origin = 0
+		goals = []
+		if _useChar:
+			edges = {chr(64 + key): {chr(64 + k): v for k, v in value.items()} for key, value in _edges.items()}
+			locations = {chr(64 + key): value for key, value in _nodes.items()}
+			origin = chr(64 + _origin)
+			goals = [chr(64 + value) for value in _destinations]
+		else:
+			edges = {key: {k: v for k, v in value.items()} for key, value in _edges.items()}
+			locations = {key: value for key, value in _nodes.items()}
+			origin = _origin
+			goals = [value for value in _destinations]
 
 		#print("Edges:", edges, sep=" ")
 		#print("Locations:", locations, sep=" ")
@@ -534,7 +545,7 @@ def import_graph(_file):
 		return GraphProblem(origin, goals, graph), goals
 
 	nodes, edges, origin, destinations = parse_graph(_file)
-	problem, goals = create_graph_problem(nodes, edges, origin, destinations)
+	problem, goals = create_graph_problem(nodes, edges, origin, destinations, False)
 	return problem, goals
 
 #def create_graph():
