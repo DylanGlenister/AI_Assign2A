@@ -320,7 +320,7 @@ class GraphProblem(Problem):
 		else:
 			return np.inf
 
-def depth_first_graph_search(problem: GraphProblem) -> tuple[Node | None, int]:
+def depth_first_graph_search(_problem: GraphProblem, _debug) -> tuple[Node | None, int]:
 	"""
 	[Figure 3.7]
 	Search the deepest nodes in the search tree first.
@@ -329,40 +329,44 @@ def depth_first_graph_search(problem: GraphProblem) -> tuple[Node | None, int]:
 	Does not get trapped by loops.
 	If two paths reach a state, only use the first one.
 	"""
-	frontier = [(Node(problem.initial))]  # Stack
+	frontier = [(Node(_problem.initial))]  # Stack
 
 	explored = set()
 	while frontier:
 		node = frontier.pop()
-		if problem.goal_test(node.state):
+		if _debug:
+			print(node, node.expand(_problem))
+		if _problem.goal_test(node.state):
 			return node, len(explored)
 		explored.add(node.state)
-		frontier.extend(child for child in node.expand(problem)
+		frontier.extend(child for child in node.expand(_problem)
 						if child.state not in explored and child not in frontier)
 	return None, len(explored)
 
-def breadth_first_graph_search(problem: GraphProblem) -> tuple[Node | None, int]:
+def breadth_first_graph_search(_problem: GraphProblem, _debug) -> tuple[Node | None, int]:
 	"""[Figure 3.11]
 	Note that this function can be implemented in a
 	single line as below:
 	return graph_search(problem, FIFOQueue())
 	"""
-	node = Node(problem.initial)
-	if problem.goal_test(node.state):
+	node = Node(_problem.initial)
+	if _problem.goal_test(node.state):
 		return node, int(1)
 	frontier = deque([node])
 	explored = set()
 	while frontier:
 		node = frontier.popleft()
+		if _debug:
+			print(node, node.expand(_problem))
 		explored.add(node.state)
-		for child in node.expand(problem):
+		for child in node.expand(_problem):
 			if child.state not in explored and child not in frontier:
-				if problem.goal_test(child.state):
+				if _problem.goal_test(child.state):
 					return child, len(explored)
 				frontier.append(child)
 	return None, len(explored)
 
-def best_first_graph_search(problem: GraphProblem, f, display=False) -> tuple[Node | None, int]:
+def best_first_graph_search(_problem: GraphProblem, _debug, _f, _display=False) -> tuple[Node | None, int]:
 	"""Search the nodes with the lowest f scores first.
 	You specify the function f(node) that you want to minimize; for example,
 	if f is a heuristic estimate to the goal, then we have greedy best
@@ -371,45 +375,49 @@ def best_first_graph_search(problem: GraphProblem, f, display=False) -> tuple[No
 	values will be cached on the nodes as they are computed. So after doing
 	a best first search you can examine the f values of the path returned."""
 	#f = memoize(f, 'f')
-	f = memoize(f)
-	node = Node(problem.initial)
-	frontier = PriorityQueue('min', f)
+	_f = memoize(_f)
+	node = Node(_problem.initial)
+	frontier = PriorityQueue('min', _f)
 	frontier.append(node)
 	explored = set()
 	while frontier:
 		node = frontier.pop()
-		if problem.goal_test(node.state):
-			if display:
+		if _debug:
+			print(node, node.expand(_problem))
+		if _problem.goal_test(node.state):
+			if _display:
 				print(len(explored), "paths have been expanded and", len(frontier), "paths remain in the frontier")
 			return node, len(explored)
 		explored.add(node.state)
-		for child in node.expand(problem):
+		for child in node.expand(_problem):
 			if child.state not in explored and child not in frontier:
 				frontier.append(child)
 			elif child in frontier:
-				if f(child) < frontier[child]:
+				if _f(child) < frontier[child]:
 					del frontier[child]
 					frontier.append(child)
 	return None, len(explored)
 
 # This is effectively the greedy best first search
-def uniform_cost_search(problem: GraphProblem, display=False) -> tuple[Node | None, int]:
+def uniform_cost_search(_problem: GraphProblem, _debug, _display=False) -> tuple[Node | None, int]:
 	"""[Figure 3.14]"""
-	return best_first_graph_search(problem, lambda node: node.path_cost, display)
+	return best_first_graph_search(_problem, _debug, lambda node: node.path_cost, _display)
 
-def depth_limited_search(problem: GraphProblem, limit=50):
+def depth_limited_search(_problem: GraphProblem, _debug, _limit=50):
 	"""[Figure 3.17]"""
 
-	def recursive_dls(node: Node, problem: GraphProblem, limit: int):
-		minLimit = limit
-		if problem.goal_test(node.state):
-			return node, minLimit
-		elif limit == 0:
+	def recursive_dls(_node: Node, _problem: GraphProblem, _limit: int, _debug: bool):
+		if _debug:
+			print(_node, _node.expand(_problem))
+		minLimit = _limit
+		if _problem.goal_test(_node.state):
+			return _node, minLimit
+		elif _limit == 0:
 			return 'cutoff', minLimit
 		else:
 			cutoff_occurred = False
-			for child in node.expand(problem):
-					result, minLimit = recursive_dls(child, problem, limit - 1)
+			for child in _node.expand(_problem):
+					result, minLimit = recursive_dls(child, _problem, _limit - 1, _debug)
 					if result == 'cutoff':
 						cutoff_occurred = True
 					elif result is not None:
@@ -421,14 +429,14 @@ def depth_limited_search(problem: GraphProblem, limit=50):
 				return None, minLimit
 
 	# Body of depth_limited_search:
-	return recursive_dls(Node(problem.initial), problem, limit)
+	return recursive_dls(Node(_problem.initial), _problem, _limit, _debug)
 
-def iterative_deepening_search(problem: GraphProblem):
+def iterative_deepening_search(_problem: GraphProblem, _debug):
 	"""[Figure 3.18]"""
 
 	total = 0
 	for depth in range(sys.maxsize):
-		result, limit = depth_limited_search(problem, depth)
+		result, limit = depth_limited_search(_problem, _debug, depth)
 		# If limit is zero, the number of nodes checked is the depth
 		total += depth - limit
 		if result != 'cutoff':
@@ -437,31 +445,33 @@ def iterative_deepening_search(problem: GraphProblem):
 	# Stupid fallback to shut python up
 	return None, int(0)
 
-def astar_search(problem: GraphProblem, h=None, display=False) -> tuple[Node | None, int]:
+def astar_search(_problem: GraphProblem, _debug, _h=None, _display=False) -> tuple[Node | None, int]:
 	"""A* search is best-first graph search with f(n) = g(n)+h(n).
 	You need to specify the h function when you call astar_search, or
 	else in your Problem subclass."""
 	#h = memoize(h or problem.h, 'h')
-	h = memoize(h or problem.h)
-	return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
+	_h = memoize(_h or _problem.h)
+	return best_first_graph_search(_problem, _debug, lambda n: n.path_cost + _h(n), _display)
 
-def beam_search(problem: GraphProblem, k=2) -> tuple[Node | None, int]:
+def beam_search(_problem: GraphProblem, _debug, _k=2) -> tuple[Node | None, int]:
 	frontier = PriorityQueue('min', lambda n: n.path_cost)
-	frontier.append(Node(problem.initial))
+	frontier.append(Node(_problem.initial))
 	explored = set()
 	while frontier:
-		if len(frontier) > k:
-			frontier.heap = sorted(frontier.heap)[:k]
+		if len(frontier) > _k:
+			frontier.heap = sorted(frontier.heap)[:_k]
 		node = frontier.pop()
-		if problem.goal_test(node.state):
+		if _debug:
+			print(node, node.expand(_problem))
+		if _problem.goal_test(node.state):
 			return node, len(explored)
 		explored.add(node.state)
-		children = list(node.expand(problem))
+		children = list(node.expand(_problem))
 		new_candidates = [child for child in children if child.state not in explored]
 		frontier.extend(new_candidates)
 	return None, len(explored)
 
-def import_graph(_file):
+def import_graph(_file, _useChar = False, _debug=False):
 	"""Import the graph data. Create the GraphProblem and return it, also return the goal."""
 	def parse_graph(_file):
 		# Import the text file into a variable
@@ -528,7 +538,8 @@ def import_graph(_file):
 		_edges: dict[int, dict[int, int]],
 		_origin: int,
 		_destinations: list[int],
-		_useChar: bool = True
+		_useChar: bool,
+		_debug: bool
 	):
 		edges = {}
 		locations = {}
@@ -545,17 +556,18 @@ def import_graph(_file):
 			origin = _origin
 			goals = [value for value in _destinations]
 
-		#print("Edges:", edges, sep=" ")
-		#print("Locations:", locations, sep=" ")
-		#print("Origin:", origin, sep=" ")
-		#print("Destinations:", goals, sep=" ")
+		if _debug:
+			print("Edges:", edges, sep=" ")
+			print("Locations:", locations, sep=" ")
+			print("Origin:", origin, sep=" ")
+			print("Destinations:", goals, sep=" ")
 
 		graph = Graph(edges)
 		graph.locations = locations
 		return GraphProblem(origin, goals, graph), goals
 
 	nodes, edges, origin, destinations = parse_graph(_file)
-	problem, goals = create_graph_problem(nodes, edges, origin, destinations, False)
+	problem, goals = create_graph_problem(nodes, edges, origin, destinations, _useChar, _debug)
 	return problem, goals
 
 def select_method(_method: str):
@@ -576,8 +588,7 @@ def select_method(_method: str):
 		case _:
 			return None
 
-if __name__ == "__main__":
-
+def main(_debug):
 	if len(sys.argv) < 3:
 		print("Missing arguments: python search.py <filename> <method>")
 		quit()
@@ -585,8 +596,7 @@ if __name__ == "__main__":
 	if len(sys.argv) > 3:
 		print("Excess arguments: python search.py <filename> <method>")
 
-	#graph_problem, goals = create_graph()
-	graph_problem, goals = import_graph(sys.argv[1])
+	graph_problem, goals = import_graph(sys.argv[1], False, _debug)
 
 	# Extract parameter 2: "method" function used
 	method = select_method(sys.argv[2])
@@ -595,8 +605,7 @@ if __name__ == "__main__":
 		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS, CUS1, CUS2, IDS, BS")
 		quit()
 
-	#result, count = iterative_deepening_search(graph_problem)
-	result, count = method(graph_problem)
+	result, count = method(graph_problem, _debug)
 
 	# Output paramter 1
 	print("filename=", sys.argv[1], sep="", end=" | ")
@@ -614,3 +623,6 @@ if __name__ == "__main__":
 		print("path=", result.solution(), sep="")
 	else:
 		print("No path found!")
+
+if __name__ == "__main__":
+	main(False)
