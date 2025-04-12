@@ -12,11 +12,13 @@ import re
 import numpy as np
 
 def is_in(elt, seq):
-	"""Similar to (elt in seq), but compares with 'is', not '=='."""
+	"""Similar to (elt in seq), but compares with 'is', not '=='. From AIMA."""
+
 	return any(x is elt for x in seq)
 
 def distance(a: tuple, b: tuple):
-	"""The distance between two (x, y) points."""
+	"""The distance between two (x, y) points. From AIMA."""
+
 	xA, yA = a
 	xB, yB = b
 	return np.hypot((xA - xB), (yA - yB))
@@ -24,7 +26,8 @@ def distance(a: tuple, b: tuple):
 def memoize(fn, slot=None, maxsize=32):
 	"""Memoize fn: make it remember the computed value for any argument list.
 	If slot is specified, store result in that slot of first argument.
-	If slot is false, use lru_cache for caching the values."""
+	If slot is false, use lru_cache for caching the values. From AIMA."""
+
 	# BUG Trying to use the slot causes a TypeError. Unable to fix it.
 	if slot:
 		def memoized_normal(obj, *args):
@@ -48,7 +51,7 @@ class PriorityQueue:
 	order) is returned first.
 	If order is 'min', the item with minimum f(x) is
 	returned first; if order is 'max', then it is the item with maximum f(x).
-	Also supports dict-like lookup."""
+	Also supports dict-like lookup. From AIMA."""
 
 	def __init__(self, order='min', f=lambda x: x):
 		self.heap = []
@@ -104,7 +107,8 @@ class Problem:
 	"""The abstract class for a formal problem. You should subclass
 	this and implement the methods actions and result, and possibly
 	__init__, goal_test, and path_cost. Then you will create instances
-	of your subclass and solve them with the various search functions."""
+	of your subclass and solve them with the various search functions.
+	From AIMA."""
 
 	def __init__(self, initial, goal=None):
 		"""The constructor specifies the initial state, and possibly a goal
@@ -157,7 +161,7 @@ class Node:
 	the total path_cost (also known as g) to reach the node. Other functions
 	may add an f and h value; see best_first_graph_search and astar_search for
 	an explanation of how the f and h values are handled. You will not need to
-	subclass this class."""
+	subclass this class. From AIMA."""
 
 	f = None
 
@@ -227,7 +231,7 @@ class Graph:
 	inverse link is also added. You can use g.nodes() to get a list of nodes,
 	g.get('A') to get a dict of links out of A, and g.get('A', 'B') to get the
 	length of the link from A to B. 'Lengths' can actually be any object at
-	all, and nodes can be any hashable object."""
+	all, and nodes can be any hashable object. From AIMA."""
 
 	def __init__(self, graph_dict=None, directed=True):
 		self.locations = {}
@@ -272,7 +276,7 @@ class Graph:
 		return list(nodes)
 
 class GraphProblem(Problem):
-	"""The problem of searching a graph from one node to another."""
+	"""The problem of searching a graph from one node to another. From AIMA."""
 
 	def __init__(self, initial, goal, graph):
 		super().__init__(initial, goal)
@@ -321,13 +325,12 @@ class GraphProblem(Problem):
 			return np.inf
 
 def depth_first_graph_search(_problem: GraphProblem, _debug) -> tuple[Node | None, int]:
-	"""
-	[Figure 3.7]
-	Search the deepest nodes in the search tree first.
+	"""Search the deepest nodes in the search tree first.
 	Search through the successors of a problem to find a goal.
 	The argument frontier should be an empty queue.
 	Does not get trapped by loops.
 	If two paths reach a state, only use the first one.
+	From AIMA.
 	"""
 	frontier = [(Node(_problem.initial))]  # Stack
 
@@ -344,10 +347,11 @@ def depth_first_graph_search(_problem: GraphProblem, _debug) -> tuple[Node | Non
 	return None, len(explored)
 
 def breadth_first_graph_search(_problem: GraphProblem, _debug) -> tuple[Node | None, int]:
-	"""[Figure 3.11]
+	"""Checks all nodes at a depth before moving to the next depth,
 	Note that this function can be implemented in a
 	single line as below:
 	return graph_search(problem, FIFOQueue())
+	From AIMA.
 	"""
 	node = Node(_problem.initial)
 	if _problem.goal_test(node.state):
@@ -373,7 +377,8 @@ def best_first_graph_search(_problem: GraphProblem, _debug, _f, _display=False) 
 	first search; if f is node.depth then we have breadth-first search.
 	There is a subtlety: the line "f = memoize(f, 'f')" means that the f
 	values will be cached on the nodes as they are computed. So after doing
-	a best first search you can examine the f values of the path returned."""
+	a best first search you can examine the f values of the path returned. From AIMA."""
+
 	#f = memoize(f, 'f')
 	_f = memoize(_f)
 	node = Node(_problem.initial)
@@ -398,13 +403,13 @@ def best_first_graph_search(_problem: GraphProblem, _debug, _f, _display=False) 
 					frontier.append(child)
 	return None, len(explored)
 
-# This is effectively the greedy best first search
 def uniform_cost_search(_problem: GraphProblem, _debug, _display=False) -> tuple[Node | None, int]:
-	"""[Figure 3.14]"""
+	"""This is greedy best first search. From AIMA."""
+
 	return best_first_graph_search(_problem, _debug, lambda node: node.path_cost, _display)
 
 def depth_limited_search(_problem: GraphProblem, _debug, _limit=50):
-	"""[Figure 3.17]"""
+	"""Uses recursion to explore nodes. From AIMA."""
 
 	def recursive_dls(_node: Node, _problem: GraphProblem, _limit: int, _debug: bool):
 		if _debug:
@@ -432,7 +437,7 @@ def depth_limited_search(_problem: GraphProblem, _debug, _limit=50):
 	return recursive_dls(Node(_problem.initial), _problem, _limit, _debug)
 
 def iterative_deepening_search(_problem: GraphProblem, _debug):
-	"""[Figure 3.18]"""
+	"""Repeatedly calls depth limited search with more depth values. From AIMA."""
 
 	total = 0
 	for depth in range(sys.maxsize):
@@ -448,12 +453,15 @@ def iterative_deepening_search(_problem: GraphProblem, _debug):
 def astar_search(_problem: GraphProblem, _debug, _h=None, _display=False) -> tuple[Node | None, int]:
 	"""A* search is best-first graph search with f(n) = g(n)+h(n).
 	You need to specify the h function when you call astar_search, or
-	else in your Problem subclass."""
+	else in your Problem subclass. From AIMA."""
+
 	#h = memoize(h or problem.h, 'h')
 	_h = memoize(_h or _problem.h)
 	return best_first_graph_search(_problem, _debug, lambda n: n.path_cost + _h(n), _display)
 
 def beam_search(_problem: GraphProblem, _debug, _k=2) -> tuple[Node | None, int]:
+	"""Works like a focused greedy best first search."""
+
 	frontier = PriorityQueue('min', lambda n: n.path_cost)
 	frontier.append(Node(_problem.initial))
 	explored = set()
@@ -473,7 +481,10 @@ def beam_search(_problem: GraphProblem, _debug, _k=2) -> tuple[Node | None, int]
 
 def import_graph(_file, _useChar = False, _debug=False):
 	"""Import the graph data. Create the GraphProblem and return it, also return the goal."""
+
 	def parse_graph(_file):
+		"""Parse the graph file and import the raw data."""
+
 		# Import the text file into a variable
 		with open(_file, 'r') as _file:
 			lines = _file.readlines()
@@ -506,18 +517,25 @@ def import_graph(_file, _useChar = False, _debug=False):
 				continue
 
 			match section:
+				# Import the nodes
 				case "nodes":
+					# Match with regex
 					match = re.match(r'(\d+): \((\d+),(\d+)\)', line)
 					if match:
+						# Extract the node and the coordinates
 						node, x, y = match.groups()
-						# Initial store the the nodes using the number ID, duplicating an ID will overwrite it.
+						# Store the nodes using the number ID, duplicating an ID will overwrite it.
 						nodes[int(node)] = (int(x), int(y))
 
+				# Import the edges
 				case "edges":
+					# Match with regex
 					match = re.match(r'\((\d+),(\d+)\): (\d+)', line)
 					if match:
+						# Extract the start node, end node and goal
 						n1, n2, cost = match.groups()
 						n1, n2, cost = int(n1), int(n2), int(cost)
+						# Create a dictionary element for the first node if it does not yet exist
 						if n1 not in edges:
 							edges[n1] = {}
 						edges[n1][n2] = cost
@@ -541,10 +559,14 @@ def import_graph(_file, _useChar = False, _debug=False):
 		_useChar: bool,
 		_debug: bool
 	):
+		"""Take the raw data from the graph file and convert it into a graph problem."""
+
 		edges = {}
 		locations = {}
 		origin = 0
 		goals = []
+
+		# Old code, converted the numeric id into a character, 64 being the offset before A
 		if _useChar:
 			edges = {chr(64 + key): {chr(64 + k): v for k, v in value.items()} for key, value in _edges.items()}
 			locations = {chr(64 + key): value for key, value in _nodes.items()}
@@ -554,8 +576,9 @@ def import_graph(_file, _useChar = False, _debug=False):
 			edges = {key: {k: v for k, v in value.items()} for key, value in _edges.items()}
 			locations = {key: value for key, value in _nodes.items()}
 			origin = _origin
-			goals = [value for value in _destinations]
+			goals = _destinations
 
+		# Useful debugging information
 		if _debug:
 			print("Edges:", edges, sep=" ")
 			print("Locations:", locations, sep=" ")
@@ -589,13 +612,16 @@ def select_method(_method: str):
 			return None
 
 def main(_debug):
+	# Not enough arguments
 	if len(sys.argv) < 3:
 		print("Missing arguments: python search.py <filename> <method>")
 		quit()
 
+	# Too many arguments
 	if len(sys.argv) > 3:
 		print("Excess arguments: python search.py <filename> <method>")
 
+	# Import the graph file
 	graph_problem, goals = import_graph(sys.argv[1], False, _debug)
 
 	# Extract parameter 2: "method" function used
@@ -605,6 +631,7 @@ def main(_debug):
 		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS, CUS1, CUS2, IDS, BS")
 		quit()
 
+	# Call the selected pathfinding method
 	result, count = method(graph_problem, _debug)
 
 	# Output paramter 1
@@ -625,4 +652,5 @@ def main(_debug):
 		print("No path found!")
 
 if __name__ == "__main__":
+	# Swapping this parameter to true prints information during the pathfinding for debug purposes
 	main(False)
