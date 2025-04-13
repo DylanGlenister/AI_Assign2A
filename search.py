@@ -9,6 +9,7 @@ import sys
 import functools
 import heapq
 import re
+import time
 import numpy as np
 
 def is_in(elt, seq):
@@ -611,7 +612,9 @@ def select_method(_method: str):
 		case _:
 			return None
 
-def main(_debug):
+def main(_output = True, _debug = False):
+	"""Main execution of the script. Returns the exection time."""
+
 	# Not enough arguments
 	if len(sys.argv) < 3:
 		print("Missing arguments: python search.py <filename> <method>")
@@ -631,26 +634,43 @@ def main(_debug):
 		print("Incorrect method type, valid methods:\nDFS, BFS, GBFS, AS, CUS1, CUS2, IDS, BS")
 		quit()
 
+	start_time = time.time()
 	# Call the selected pathfinding method
 	result, count = method(graph_problem, _debug)
+	duration = time.time() - start_time
 
-	# Output paramter 1
-	print("filename=", sys.argv[1], sep="", end=" | ")
-	# Output paramter 2
-	print("method=", sys.argv[2], sep="")
-	# \n
-	# Ouput goal node
-	print("goal=", goals, sep="", end=" | ")
+	if _debug:
+		print("Completed pathfinding in ", duration)
 
-	# Output number (length of path)
-	print("number of nodes=", count, sep="")
-	# \n
-	if (result is not None):
-		# Output path: list of nodes
-		print("path=", result.solution(), sep="")
-	else:
-		print("No path found!")
+	if _output:
+		# Output paramter 1
+		print("filename=", sys.argv[1], sep="", end=" | ")
+		# Output paramter 2
+		print("method=", sys.argv[2], sep="")
+		# \n
+		# Ouput goal node
+		print("goal=", goals, sep="", end=" | ")
+
+		# Output number (length of path)
+		print("number of nodes=", count, sep="")
+		# \n
+		if (result is not None):
+			# Output path: list of nodes
+			print("path=", result.solution(), sep="")
+		else:
+			print("No path found!")
+
+	return duration
+
+def compute_average_runtime(_freq = 25000):
+	"""Exectues the main function repeatedly"""
+
+	sum = 0
+	for num in range(_freq):
+		sum += main(False)
+
+	print("Average exection time accross ", _freq, " runs is ", sum / _freq)
 
 if __name__ == "__main__":
-	# Swapping this parameter to true prints information during the pathfinding for debug purposes
-	main(False)
+	main()
+	#compute_average_runtime()
